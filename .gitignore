@@ -1,0 +1,15 @@
+*.class
+.settings/
+bin/
+cache/
+devpackage/
+hp/
+jardesc/
+launch4j/
+manifest/
+profile/
+res/
+testdata/
+prefs
+stderr
+stdout

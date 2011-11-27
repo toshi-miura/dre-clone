@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<package>
+	<information>
+		<key>jp.thisnor.dre.pixeldup</key>
+		<name>Pixel Duplication</name>
+		<version>1.0</version>
+		<author>jp.thisnor</author>
+		<caption lang="ja">ピクセル完全一致画像の検出アルゴリズム</caption>
+		<description lang="ja">ファイル内容をピクセルレベルで比較します。</description>
+		<caption lang="en">Checks all pixels are equal or not.</caption>
+		<description lang="en">Checks all pixels are equal or not.</description>
+	</information>
+	<class>
+		<measurer>jp.thisnor.dre.pixeldup.PixelDupMeasurer</measurer>
+	</class>
+	<options>
+		<option>
+			<key>threshold</key>
+			<name lang="ja">スレッショルド</name>
+			<name lang="en">Threshold</name>
+			<default>1</default>
+		</option>
+		<option>
+			<key>hashAlgorithm</key>
+			<name lang="ja">ハッシュアルゴリズム</name>
+			<name lang="en">Hash algorithm</name>
+			<select>
+				<value>MD5</value>
+				<value>SHA-1</value>
+				<value>SHA-256</value>
+			</select>
+			<default>MD5</default>
+		</option>
+		<option>
+			<key>useCache</key>
+			<name lang="ja">キャッシュを使用する</name>
+			<name lang="en">Use cache</name>
+			<select>
+				<value>true</value>
+				<value>false</value>
+			</select>
+			<default>true</default>
+		</option>
+	</options>
+</package>

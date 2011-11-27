@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<package>
+	<!-- パッケージ情報 -->
+	<information>
+		<key>jp.thisnor.dre.bindup.sample</key>
+		<name>BinDup (Sample)</name>
+		<version>1.0</version>
+		<author>jp.thisnor</author>
+		<caption>パッケージサンプル</caption>
+		<description>パッケージのサンプルです。実用向けにはBinDupを使用してください。</description>
+	</information>
+	<!-- クラス指定 -->
+	<class>
+		<measurer>jp.thisnor.dre.bindup.sample.BinDupMeasurer</measurer>
+	</class>
+	<!-- オプション -->
+	<options>
+		<option>
+			<key>threshold</key>
+			<name>スレッショルド</name>
+			<default>1</default>
+			<!--
+			<select>
+				<value>0</value>
+				<value>1</value>
+				...
+			</select>
+			 -->
+		</option>
+		<!--
+		<option>
+			...
+		</option>
+		...
+		-->
+	</options>
+</package>
