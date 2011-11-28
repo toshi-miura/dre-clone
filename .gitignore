@@ -3,6 +3,7 @@
 bin/
 cache/
 devpackage/
+distribution/
 hp/
 jardesc/
 launch4j/
