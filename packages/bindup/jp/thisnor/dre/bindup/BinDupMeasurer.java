@@ -5,13 +5,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-import jp.thisnor.dre.gui.FileEntry;
-import jp.thisnor.dre.gui.FileEntryMeasurer;
-import jp.thisnor.dre.gui.OptionEntry;
+import jp.thisnor.dre.core.FileEntry;
+import jp.thisnor.dre.core.Measurer;
+import jp.thisnor.dre.core.MeasureOptionEntry;
 
-public class BinDupMeasurer implements FileEntryMeasurer {
+public class BinDupMeasurer implements Measurer {
 	@Override
-	public void init(Map<String, OptionEntry> optionMap) {
+	public void init(Map<String, MeasureOptionEntry> optionMap) {
 	}
 
 	@Override

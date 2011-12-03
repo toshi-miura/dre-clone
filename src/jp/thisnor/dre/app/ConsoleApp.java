@@ -1,0 +1,194 @@
+package jp.thisnor.dre.app;
+/*
+
+package jp.thisnor.dre.gui;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
+
+import jp.thisnor.dre.core.FileEntry;
+import jp.thisnor.dre.core.MeasureOptionEntry;
+import jp.thisnor.dre.core.MeasurerPackage;
+import jp.thisnor.dre.core.PathFilter;
+import jp.thisnor.dre.core.ProgressListener;
+import jp.thisnor.dre.core.SimilarEntry;
+import jp.thisnor.dre.core.WholeTask;
+
+class ConsoleApp {
+	private static final String
+		PACKAGE_DIR = "packages";
+
+	private String packageName;
+	private List<String> targetPathList, storagePathList;
+	private PathFilter filter;
+	private Map<String, String> optionStrMap;
+	private int numThreads = 1;
+
+	private static final ProgressListener STDERR_PROGRESS_LISTENER = new ProgressListener() {
+		@Override
+		public void progressLoad(int step, int size) {
+
+		}
+		@Override
+		public void progressMeasure(int step, int size) {
+
+		}
+		@Override
+		public void log(String line) {
+			System.err.println(line);
+		}
+	};
+
+	ConsoleApp(String[] args) {
+		for (String arg : args) {
+			if (arg.startsWith("--package=")) {
+				packageName = arg.substring("--package=".length());
+			} else if (arg.startsWith("--storage-path=")) {
+				storagePathList = textToList(arg.substring("--storage-path=".length()));
+			} else if (arg.startsWith("--filter=")) {
+				filter = textToFilter(arg.substring("--filter=".length()));
+			} else if (arg.startsWith("--package-option=")) {
+				optionStrMap = textToMap(arg.substring("--package-option=".length()));
+			} else if (arg.startsWith("--numthreads=")) {
+				try {
+					numThreads = Integer.parseInt(arg.substring("--numthreads=".length()));
+				} catch (NumberFormatException e) {
+					System.err.println("WARNING: Need number: " + arg);
+					numThreads = 1;
+				}
+			} else {
+				targetPathList = textToList(arg);
+			}
+		}
+	}
+
+	private static List<String> textToList(String text) {
+		String[] strs = text.split(":");
+		List<String> strList = Collections.synchronizedList(new ArrayList<String>(strs.length));
+		for (String str : strs) {
+			if (str.charAt(0) == '"') str = str.substring(1);
+			if (str.charAt(str.length() - 1) == '"') str = str.substring(0, str.length() - 1);
+			strList.add(str);
+		}
+		return strList;
+	}
+
+	private static Map<String, String> textToMap(String text) {
+		String[] strs = text.split(":");
+		Map<String, String> strMap = new HashMap<String, String>(strs.length, 2.0f);
+		for (String str : strs) {
+			int seppos = str.indexOf('=');
+			String key = seppos >= 0 ? str.substring(0, seppos) : str;
+			String value = seppos >= 0 ? str.substring(seppos + 1) : "true";
+			if (value.charAt(0) == '"') value = value.substring(1);
+			if (value.charAt(value.length() - 1) == '"') value = value.substring(0, value.length() - 1);
+			strMap.put(key, value);
+		}
+		return strMap;
+	}
+
+	private static PathFilter textToFilter(String text) {
+		if (text.charAt(0) == '"') text = text.substring(1);
+		if (text.charAt(text.length() - 1) == '"') text = text.substring(0, text.length() - 1);
+		final Pattern pattern = Pattern.compile(text);
+		return new PathFilter() {
+			@Override
+			public boolean accept(String path) {
+				return pattern.matcher(path).matches();
+			}
+		};
+	}
+
+	boolean run() {
+		if (packageName == null) {
+			System.err.println("ERROR: Specify package with --package=**");
+		}
+		System.err.println("Loading the package...");
+		MeasurerPackage measurerPackage = null;
+		try {
+			measurerPackage = MeasurerPackage.importPackage(new File(PACKAGE_DIR + File.separator + packageName));
+		} catch (IOException e) {
+			System.err.println("ERROR: Not found specified package: " + packageName);
+			return false;
+		}
+		System.err.println("  package key: " + measurerPackage.getKey());
+		System.err.println("  package name: " + measurerPackage.getName());
+		System.err.println("  version: " + measurerPackage.getVersion());
+
+		Map<String, MeasureOptionEntry> optionMap = measurerPackage.getOptionMap();
+		if (optionStrMap != null) {
+			for (Entry<String, String> e : optionStrMap.entrySet()) {
+				MeasureOptionEntry optionEntry = optionMap.get(e.getKey());
+				if (optionEntry == null) {
+					System.err.println("WARNING: Not found specified option key: " + e.getKey());
+					continue;
+				}
+				List<String> candidates = optionEntry.getCandidateList();
+				if (candidates != null && !candidates.contains(e.getValue())) {
+					System.err.println("WARNING: Specified option value is not allowed: " + e.getKey() + "=" + e.getValue());
+					continue;
+				}
+				optionEntry.setValue(e.getValue());
+			}
+		}
+		System.err.println("Checking package options...");
+		for (MeasureOptionEntry option : optionMap.values()) {
+			System.err.printf("  %s (%s): %s%n", option.getName(), option.getKey(), option.getValue());
+		}
+
+		System.err.println("Doing detection...");
+		WholeTask task = new WholeTask(
+				targetPathList,
+				storagePathList, filter,
+				measurerPackage.getHandler(), optionMap, numThreads,
+				STDERR_PROGRESS_LISTENER
+				);
+		Map<FileEntry, List<SimilarEntry>> similarMap = null;
+		try {
+			similarMap = task.call();
+		} catch (InterruptedException e) {
+			System.err.println("Aborted");
+			return false;
+		}
+
+		Set<FileEntry> fileEntrySet = new TreeSet<FileEntry>();
+		for (Entry<NewFileEntry, List<SimilarEntry>> e : similarMap.entrySet()) {
+			fileEntrySet.add(e.getKey());
+			for (SimilarEntry sim : e.getValue()) {
+				fileEntrySet.add(sim.getFileEntry());
+			}
+		}
+
+		System.err.println("Writing the result...");
+		printInXML(fileEntrySet, similarMap);
+
+		return true;
+	}
+
+	private void printInXML(Set<NewFileEntry> fileEntrySet, Map<NewFileEntry, List<SimilarEntry>>similarMap) {
+		System.out.println("<?xml version=\"1.0\"?>");
+		System.out.println("<result>");
+		for (NewFileEntry fileEntry : fileEntrySet) {
+			System.out.printf("  <file id=\"%d\" path=\"%s\" />%n", fileEntry.getID(), fileEntry.getPath());
+		}
+		for (Entry<NewFileEntry, List<SimilarEntry>> entry : similarMap.entrySet()) {
+			System.out.printf("  <simgroup srcfile=\"%d\">%n", entry.getKey().getID());
+			for (SimilarEntry sim : entry.getValue()) {
+				System.out.printf("    <simitem distance=\"%d\" file=\"%d\" />%n", sim.getDistance(), sim.getFileEntry().getID());
+			}
+			System.out.println("  </simgroup>");
+		}
+		System.out.println("</result>");
+	}
+}
+*/

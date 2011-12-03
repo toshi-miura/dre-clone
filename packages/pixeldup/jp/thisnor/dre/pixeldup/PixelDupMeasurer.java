@@ -23,11 +23,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.imageio.ImageIO;
 
-import jp.thisnor.dre.gui.FileEntry;
-import jp.thisnor.dre.gui.FileEntryMeasurer;
-import jp.thisnor.dre.gui.OptionEntry;
+import jp.thisnor.dre.core.FileEntry;
+import jp.thisnor.dre.core.Measurer;
+import jp.thisnor.dre.core.MeasureOptionEntry;
 
-public class PixelDupMeasurer implements FileEntryMeasurer {
+public class PixelDupMeasurer implements Measurer {
 	private static final File CACHE_DIR = new File("cache");
 	private static final File CACHE_FILE = new File("cache/jp.thisnor.dre.pixeldup.cache.sqlite3");
 	private static final String TABLE_NAME = "pixeldup_cache";
@@ -39,7 +39,7 @@ public class PixelDupMeasurer implements FileEntryMeasurer {
 	private static final int PREF_QUEUE_SIZE = 64;
 
 	@Override
-	public void init(Map<String, OptionEntry> optionMap) {
+	public void init(Map<String, MeasureOptionEntry> optionMap) {
 		algorithm = optionMap.get("hashAlgorithm").getValue();
 		useCache = optionMap.get("useCache").getValue().equals("true");
 		if (useCache) {

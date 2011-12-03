@@ -18,11 +18,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import javax.imageio.ImageIO;
 
-import jp.thisnor.dre.gui.FileEntry;
-import jp.thisnor.dre.gui.FileEntryMeasurer;
-import jp.thisnor.dre.gui.OptionEntry;
+import jp.thisnor.dre.core.FileEntry;
+import jp.thisnor.dre.core.Measurer;
+import jp.thisnor.dre.core.MeasureOptionEntry;
 
-public class LLSMeasurer implements FileEntryMeasurer {
+public class LLSMeasurer implements Measurer {
 	/* キャッシュ保管場所 */
 	private static final File CACHE_DIR = new File("cache");
 	private static final File CACHE_FILE = new File("cache/jp.thisnor.dre.lls.cache.sqlite3");
@@ -44,7 +44,7 @@ public class LLSMeasurer implements FileEntryMeasurer {
 	private int numImages;
 
 	@Override
-	public void init(Map<String, OptionEntry> optionMap) {
+	public void init(Map<String, MeasureOptionEntry> optionMap) {
 //		messages = new Messages(new Locale(optionMap.get("lang").getValue()), this.getClass().getClassLoader());
 
 		useCache = optionMap.get("useCache").getValue().equals("true");

@@ -5,16 +5,16 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Map;
 
-import jp.thisnor.dre.gui.FileEntry;
-import jp.thisnor.dre.gui.FileEntryMeasurer;
-import jp.thisnor.dre.gui.OptionEntry;
+import jp.thisnor.dre.core.FileEntry;
+import jp.thisnor.dre.core.Measurer;
+import jp.thisnor.dre.core.MeasureOptionEntry;
 
-public class BinDupMeasurer implements FileEntryMeasurer {
+public class BinDupMeasurer implements Measurer {
 	/**
 	 * 初期化処理。convertが呼ばれる前に、メインスレッドから一度だけ呼び出される。
 	 */
 	@Override
-	public void init(Map<String, OptionEntry> optionMap) {
+	public void init(Map<String, MeasureOptionEntry> optionMap) {
 	}
 
 	/**
