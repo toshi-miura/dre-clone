@@ -1,9 +1,7 @@
 package jp.thisnor.dre.app;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -82,16 +80,14 @@ class FileDropListViewer {
 	private ExecutorService computePropertiesExecutor;
 	private Map<FileEntry, String> propertiesMap;
 
-	private ExecutorService collectFileExecutor;
-	private List<FileEntry> fileEntryList;
+	private List<String> pathList;
 	private boolean listChanged;
 
 	FileDropListViewer(DREFrame frame, Composite parentComp) {
 		messages = frame.getMessages();
 		computePropertiesExecutor = Executors.newSingleThreadExecutor();
 		propertiesMap = new WeakHashMap<FileEntry, String>();
-		fileEntryList = new ArrayList<FileEntry>(1);
-		fileEntryList.add(null);
+		listChanged = true;
 
 		fileIconImage = ImageUtils.loadImage(FILE_ICON_PATH);
 		imageFileIconImage = ImageUtils.loadImage(IMAGE_FILE_ICON_PATH);
@@ -173,52 +169,28 @@ class FileDropListViewer {
 	void addFiles(String[] paths, int insertPos) {
 		addFilesRaw(paths, insertPos);
 		updateCheckboxLocation(0);
-		listChanged = true;
 	}
 
-	void computeFileEntryList(FilenameFilter filter) {
-		computeFileEntryList(filter, false);
-	}
-	void computeFileEntryList(FilenameFilter filter, boolean force) {
-		if (force || listChanged) {
-			if (collectFileExecutor != null) {
-				collectFileExecutor.shutdownNow();
-			}
-			if (fileTable.getItemCount() == 0 || fileTable.getItem(0).getData() == null) {
-				fileEntryList = Collections.emptyList();
-			} else {
-				fileEntryList = Collections.synchronizedList(new ArrayList<FileEntry>(fileTable.getItemCount() - 2));
-				collectFileExecutor = Executors.newSingleThreadExecutor();
-				collectFileExecutor.execute(new CollectFileTask(fileEntryList, filter));
+	List<String> getExtPathList() {
+		if (listChanged) {
+			pathList = new ArrayList<String>(fileTable.getItemCount() - 2);
+			for (TableItem item : fileTable.getItems()) {
+				if (item == appendDirItem || item == appendFileItem) continue;
+				StringBuilder sb = new StringBuilder();
+				sb.append(((FileEntry)item.getData()).getPath());
+				TableEditor editor = (TableEditor)item.getData(TABLE_EDITOR_KEY);
+				if (editor != null && ((Button)editor.getEditor()).getSelection()) {
+					sb.append("//");
+				}
+				pathList.add(sb.toString());
 			}
 			listChanged = false;
 		}
-	}
-
-	List<FileEntry> getFileEntryList() {
-		return fileEntryList;
-	}
-
-	List<String> getRawFileEntryList() {
-		List<String> fileEntryList = new ArrayList<String>(fileTable.getItemCount() - 2);
-		for (TableItem item : fileTable.getItems()) {
-			if (item == appendDirItem || item == appendFileItem) continue;
-			StringBuilder sb = new StringBuilder();
-			sb.append(((FileEntry)item.getData()).getPath());
-			TableEditor editor = (TableEditor)item.getData(TABLE_EDITOR_KEY);
-			if (editor != null && ((Button)editor.getEditor()).getSelection()) {
-				sb.append("//");
-			}
-			fileEntryList.add(sb.toString());
-		}
-		return fileEntryList;
+		return pathList;
 	}
 
 	void dispose() {
 		computePropertiesExecutor.shutdownNow();
-		if (collectFileExecutor != null) {
-			collectFileExecutor.shutdownNow();
-		}
 	}
 
 	private FormLayout newFormLayout(int spacing) {
@@ -241,6 +213,7 @@ class FileDropListViewer {
 		for (String p : paths) {
 			newTableItem(p, insertPos++);
 		}
+		listChanged = true;
 	}
 
 	private TableItem newTableItem(String pathex, int insertPos) {
@@ -286,7 +259,6 @@ class FileDropListViewer {
 		removeItemsRaw(indices);
 		fileTable.setSelection(indices[0]);
 		updateCheckboxLocation(indices[0]);
-		listChanged = true;
 	}
 	private void removeItemsRaw(int[] indices) {
 		for (int i : indices) {
@@ -295,6 +267,7 @@ class FileDropListViewer {
 				editor.getEditor().dispose();
 		}
 		fileTable.remove(indices);
+		listChanged = true;
 	}
 
 	private void updateCheckboxLocation(int offset) {
@@ -452,7 +425,6 @@ class FileDropListViewer {
 				if (item.getData(TABLE_EDITOR_KEY) == null) {
 					attachSubCheckEditor(item);
 				}
-				listChanged = true;
 			}
 		}
 	};
@@ -475,7 +447,6 @@ class FileDropListViewer {
 					editor.getEditor().dispose();
 					editor.dispose();
 				}
-				listChanged = true;
 			}
 		}
 	};
@@ -569,62 +540,5 @@ class FileDropListViewer {
 			viewByteSize >>= 10;
 		}
 		return String.format("%d.%d%s", viewByteSize / 10, viewByteSize % 10, FILE_SIZE_UNIT[curUnitId]); //$NON-NLS-1$
-	}
-
-	private class CollectFileTask implements Runnable {
-		private final List<FileEntry> fileEntryList;
-		private final FilenameFilter filter;
-		private TableItem[] items;
-		private FileEntry tempFileEntry;
-		private boolean collectSubEntries;
-
-		private CollectFileTask(List<FileEntry> fileEntryList, FilenameFilter filter) {
-			this.fileEntryList = fileEntryList;
-			this.filter = filter;
-		}
-
-		public void run() {
-			Display.getDefault().syncExec(new Runnable() {
-				public void run() {
-					if (!fileTable.isDisposed()) {
-						items = fileTable.getItems();
-					}
-				}
-			});
-			if (items == null) return;
-			for (final TableItem item : items) {
-				if (item == appendDirItem || item == appendFileItem) continue;
-				tempFileEntry = null;
-				collectSubEntries = false;
-				Display.getDefault().syncExec(new Runnable() {
-					public void run() {
-						if (!item.isDisposed()) {
-							tempFileEntry = (FileEntry)item.getData();
-							TableEditor editor = (TableEditor)item.getData(TABLE_EDITOR_KEY);
-							if (editor != null) {
-								collectSubEntries = ((Button)editor.getEditor()).getSelection();
-							}
-						}
-					}
-				});
-				if (tempFileEntry == null) return;
-				collectFileEntries(tempFileEntry, true, collectSubEntries);
-			}
-			fileEntryList.add(null);
-		}
-
-		private void collectFileEntries(FileEntry fileEntry, boolean root, boolean sub) {
-			if (fileEntry.isDirectory() ||
-					(fileEntry instanceof NormalFileEntry && ((NormalFileEntry)fileEntry).isZip())) {
-				if (!root && !sub) return;
-				FileEntry[] subEntries = fileEntry.subEntries();
-				for (FileEntry subEntry : subEntries) {
-					collectFileEntries(subEntry, false, sub);
-				}
-			} else {
-				if (filter.accept(null, fileEntry.getPath()))
-					fileEntryList.add(fileEntry);
-			}
-		}
 	}
 }

@@ -6,6 +6,9 @@ import java.io.PrintStream;
 
 
 public class Application {
+	public static String APP_NAME = "DRE Similar Images Detector";
+	public static String VERSION = "0.4.0";
+
 	public static void main(String[] args) {
 		if (args.length == 0) {
 			PrintStream out = null;
@@ -25,13 +28,13 @@ public class Application {
 				if (err != null) { err.flush(); err.close(); }
 			}
 		} else {
-//			if (!new ConsoleApp(args).run()) {
-//				System.err.println("Exit on failure.");
-//			}
+			if (!new ConsoleApp(args).run()) {
+				System.err.println("Exit on failure.");
+			}
 		}
 	}
 
 	public static boolean isInJar() {
-		return new File("res").exists();
+		return !new File("res").exists();
 	}
 }

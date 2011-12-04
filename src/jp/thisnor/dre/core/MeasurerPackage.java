@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -17,7 +16,6 @@ import java.util.zip.ZipEntry;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
 
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -48,7 +46,7 @@ public class MeasurerPackage {
 		description = desc.description;
 		image = (desc.image != null) ? new Image(Display.getCurrent(), clsLoader.getResourceAsStream(desc.image)) : null;
 		handler = clsLoader.loadClass(desc.handlerClsPath).asSubclass(Measurer.class).newInstance();
-		optionMap = Collections.unmodifiableMap(desc.optionMap);
+		optionMap = desc.optionMap;
 	}
 
 	public String getKey() {
@@ -159,7 +157,6 @@ public class MeasurerPackage {
 			Element classElement = (Element)doc.getElementsByTagName("class").item(0); //$NON-NLS-1$
 			desc.handlerClsPath = getNodeValue(classElement, "measurer"); //$NON-NLS-1$
 			desc.optionMap = new HashMap<String, MeasureOptionEntry>(8);
-			boolean hasThreshold = false;
 			NodeList optionList = doc.getElementsByTagName("option"); //$NON-NLS-1$
 			for (int i = 0; i < optionList.getLength(); i++) {
 				Element optionElement = (Element)optionList.item(i);
@@ -176,13 +173,6 @@ public class MeasurerPackage {
 					option.setCandidateList(candList);
 				}
 				desc.optionMap.put(option.getKey(), option);
-				if (option.getKey().equals("threshold")) hasThreshold = true; //$NON-NLS-1$
-			}
-			if (!hasThreshold) {
-				MeasureOptionEntry thresholdOption = new MeasureOptionEntry("threshold"); //$NON-NLS-1$
-				thresholdOption.setName("threshold");
-				thresholdOption.setDefaultValue("100"); //$NON-NLS-1$
-				desc.optionMap.put("threshold", thresholdOption); //$NON-NLS-1$
 			}
 			return desc;
 		} catch (ParserConfigurationException e) {

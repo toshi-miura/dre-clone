@@ -5,12 +5,11 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import jp.thisnor.dre.core.FileEntry;
 import jp.thisnor.dre.core.MeasureOptionEntry;
 import jp.thisnor.dre.core.Measurer;
 import jp.thisnor.dre.core.PathFilter;
 import jp.thisnor.dre.core.ProgressListener;
-import jp.thisnor.dre.core.SimilarEntry;
+import jp.thisnor.dre.core.SimilarGroup;
 import jp.thisnor.dre.core.WholeTask;
 
 import org.eclipse.swt.SWT;
@@ -34,17 +33,15 @@ class MeasureExecutePage extends DREPage {
 	private Text logText;
 
 	private ExecutorService executor;
-	private volatile Map<FileEntry, List<SimilarEntry>> similarMap;
+	private volatile List<SimilarGroup> simGroupList;
 
 	MeasureExecutePage(DREFrame frame) {
 		this.frame = frame;
 		this.messages = frame.getMessages();
 	}
 
-	Map<FileEntry, List<SimilarEntry>> getSimilarMap() {
-		synchronized (similarMap) {
-			return similarMap;
-		}
+	List<SimilarGroup> getSimilarGroupList() {
+		return simGroupList;
 	}
 
 	@Override
@@ -91,18 +88,14 @@ class MeasureExecutePage extends DREPage {
 		frame.setNextButtonEnabled(false);
 
 		FileEntrySelectPage fileSelectPage = frame.getPage(FileEntrySelectPage.class);
-		final List<String> targetFileList = fileSelectPage.getRawTargetFileList();
-		final List<String> storageFileList = fileSelectPage.getRawStorageFileList();
+		final List<String> targetFileList = fileSelectPage.getExtTargetFileList();
+		final List<String> storageFileList = fileSelectPage.getExtStorageFileList();
 		final PathFilter filter = fileSelectPage.getPathFilter();
 
 		PackageSelectPage packageSelectPage = frame.getPage(PackageSelectPage.class);
 		final Measurer measurer = packageSelectPage.getSelectedPackage().getHandler();
 		final Map<String, MeasureOptionEntry> optionMap = packageSelectPage.getSelectedPackage().getOptionMap();
 		final int numThreads = packageSelectPage.getNumThreads();
-
-		MeasureOptionEntry langOption = new MeasureOptionEntry("lang");
-		langOption.setDefaultValue(frame.getMessages().getLocale().getLanguage());
-		optionMap.put("lang", langOption);
 
 		final ProgressListener logger = new ProgressListener() {
 			@Override
@@ -143,15 +136,23 @@ class MeasureExecutePage extends DREPage {
 		executor = Executors.newSingleThreadExecutor();
 		executor.submit(new Runnable() {
 			public void run() {
+				WholeTask task = new WholeTask(
+						targetFileList, storageFileList, filter,
+						measurer, optionMap, numThreads,
+						logger
+						);
 				try {
-					similarMap = new WholeTask(
-							targetFileList, storageFileList, filter,
-							measurer, optionMap, numThreads,
-							logger
-							).call();
+					task.call();
+					logger.log("Finished.");
 				} catch (InterruptedException e) {
 					logger.log("Aborted.");
 				}
+				simGroupList = task.getResult();
+				Display.getDefault().asyncExec(new Runnable() {
+					public void run() {
+						frame.setNextButtonEnabled(true);
+					}
+				});
 			}
 		});
 		executor.shutdown();

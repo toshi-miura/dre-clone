@@ -103,7 +103,7 @@ public class PixelDupMeasurer implements Measurer {
 	}
 
 	@Override
-	public int measure(Object o1, Object o2) {
+	public int measure(Object o1, Object o2, int threshold) {
 		PixelDupData data1 = (PixelDupData)o1;
 		PixelDupData data2 = (PixelDupData)o2;
 		int len = Math.min(data1.hash.length, data2.hash.length);

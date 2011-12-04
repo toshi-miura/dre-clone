@@ -12,13 +12,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class WholeTask implements Callable<Map<FileEntry, List<SimilarEntry>>> {
+public class WholeTask implements Callable<List<SimilarGroup>> {
 	private final Measurer measurer;
 	private final List<String> targetList, storageList;
 	private final PathFilter filter;
 	private final Map<String, MeasureOptionEntry> optionMap;
 	private final int numThreads;
 	private final ProgressListener logger;
+
+	private volatile List<SimilarGroup> simGroupList;
 
 	private static final Comparator<MeasureEntry> MEASURE_ENTRY_COMPARATOR = new Comparator<MeasureEntry>() {
 		@Override
@@ -44,7 +46,7 @@ public class WholeTask implements Callable<Map<FileEntry, List<SimilarEntry>>> {
 		this.logger = logger;
 	}
 
-	public Map<FileEntry, List<SimilarEntry>> call() throws InterruptedException {
+	public List<SimilarGroup> call() throws InterruptedException {
 		ExecutorService executor;
 		SynchronizedCounter counter;
 
@@ -52,21 +54,21 @@ public class WholeTask implements Callable<Map<FileEntry, List<SimilarEntry>>> {
 		List<MeasureEntry> targetEntryList = Collections.synchronizedList(new ArrayList<MeasureEntry>());
 		List<MeasureEntry> storageEntryList = null;
 		executor = Executors.newFixedThreadPool(numThreads);
-		if (storageList == null) {
+		if (storageList == null || storageList == targetList) {
 			storageEntryList = targetEntryList;
 			counter = new SynchronizedCounter();
 			for (int i = 0; i < numThreads; i++) {
-				executor.submit(new ResolvePathTask(targetList, filter, targetEntryList, counter));
+				executor.submit(new ResolvePathTask(targetList, targetEntryList, filter, counter));
 			}
 		} else {
 			storageEntryList = Collections.synchronizedList(new ArrayList<MeasureEntry>());
 			counter = new SynchronizedCounter();
 			for (int i = 0; i < numThreads; i++) {
-				executor.submit(new ResolvePathTask(targetList, filter, targetEntryList, counter));
+				executor.submit(new ResolvePathTask(targetList, targetEntryList, filter, counter));
 			}
 			counter = new SynchronizedCounter();
 			for (int i = 0; i < numThreads; i++) {
-				executor.submit(new ResolvePathTask(storageList, filter, storageEntryList, counter));
+				executor.submit(new ResolvePathTask(storageList, storageEntryList, filter, counter));
 			}
 		}
 		executor.shutdown();
@@ -127,7 +129,6 @@ public class WholeTask implements Callable<Map<FileEntry, List<SimilarEntry>>> {
 		}
 
 		// First-measure
-		System.err.println("  Doing first-measuring...");
 		executor = Executors.newFixedThreadPool(numThreads);
 		counter = new SynchronizedCounter(1);
 		for (int i = 0; i < numThreads; i++) {
@@ -148,20 +149,18 @@ public class WholeTask implements Callable<Map<FileEntry, List<SimilarEntry>>> {
 		}
 
 		// Sort
-		System.err.println("  Sorting...");
 		Collections.sort(targetEntryList, MEASURE_ENTRY_COMPARATOR);
 		if (targetEntryList != storageEntryList)
 			Collections.sort(storageEntryList, MEASURE_ENTRY_COMPARATOR);
 
 		// Full-measure
-		System.err.println("  Full measuring...");
-		Map<FileEntry, List<SimilarEntry>> similarMap = Collections.synchronizedMap(new HashMap<FileEntry, List<SimilarEntry>>());
+		simGroupList = Collections.synchronizedList(new ArrayList<SimilarGroup>());
 		int threshold = optionMap.containsKey("threshold") ?
 				Integer.parseInt(optionMap.get("threshold").getValue()) : Integer.MAX_VALUE;
 		executor = Executors.newFixedThreadPool(numThreads);
 		counter = new SynchronizedCounter();
 		for (int i = 0; i < numThreads; i++) {
-			executor.submit(new FullMeasureTask(targetEntryList, storageEntryList, similarMap, measurer, threshold, counter));
+			executor.submit(new FullMeasureTask(targetEntryList, storageEntryList, simGroupList, measurer, threshold, counter));
 		}
 		executor.shutdown();
 		try {
@@ -172,10 +171,26 @@ public class WholeTask implements Callable<Map<FileEntry, List<SimilarEntry>>> {
 			executor.shutdownNow();
 			throw e;
 		}
+		logger.progressMeasure(targetEntryList.size(), targetEntryList.size());
+
+		// Sort
+		Collections.sort(simGroupList, SimilarGroup.FIRST_DISTANCE_COMPARATOR);
 
 		// Dispose
 		measurer.dispose();
+		for (MeasureEntry entry : targetEntryList) {
+			entry.data = null;
+		}
+		if (targetEntryList != storageEntryList) {
+			for (MeasureEntry entry : storageEntryList) {
+				entry.data = null;
+			}
+		}
 
-		return similarMap;
+		return simGroupList;
+	}
+
+	public List<SimilarGroup> getResult() {
+		return simGroupList;
 	}
 }

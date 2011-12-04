@@ -15,6 +15,10 @@ class SynchronizedCounter {
 		return count++;
 	}
 
+	synchronized int countdown() {
+		return --count;
+	}
+
 	synchronized int currentValue() {
 		return count;
 	}

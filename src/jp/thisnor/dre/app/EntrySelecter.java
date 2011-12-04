@@ -2,25 +2,24 @@ package jp.thisnor.dre.app;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import jp.thisnor.dre.core.FileEntry;
 import jp.thisnor.dre.core.SimilarEntry;
+import jp.thisnor.dre.core.SimilarGroup;
 
 interface EntrySelecter {
-	Set<FileEntry> select(Map<FileEntry, List<SimilarEntry>> similarMap);
+	Set<FileEntry> select(List<SimilarGroup> simGroupList);
 }
 
 class AllEntrySelecter implements EntrySelecter {
-	static AllEntrySelecter INSTANCE = new AllEntrySelecter();
+	static final AllEntrySelecter INSTANCE = new AllEntrySelecter();
 	private AllEntrySelecter() {}
-	public Set<FileEntry> select(Map<FileEntry, List<SimilarEntry>> similarMap) {
+	public Set<FileEntry> select(List<SimilarGroup> simGroupList) {
 		Set<FileEntry> resultSet = new HashSet<FileEntry>();
-		for (Entry<FileEntry, List<SimilarEntry>> entry : similarMap.entrySet()) {
-			resultSet.add(entry.getKey());
-			for (SimilarEntry similar : entry.getValue()) {
+		for (SimilarGroup simGroup : simGroupList) {
+			resultSet.add(simGroup.getFileEntry());
+			for (SimilarEntry similar : simGroup.getSimilarList()) {
 				resultSet.add(similar.getFileEntry());
 			}
 		}
@@ -28,28 +27,44 @@ class AllEntrySelecter implements EntrySelecter {
 	}
 }
 
-class ListEntrySelecter implements EntrySelecter {
-	private final List<FileEntry> fileEntryList;
-	ListEntrySelecter(List<FileEntry> fileEntryList) {
-		this.fileEntryList = fileEntryList;
+class TargetEntrySelecter implements EntrySelecter {
+	static final TargetEntrySelecter INSTANCE = new TargetEntrySelecter();
+	private TargetEntrySelecter() {}
+	public Set<FileEntry> select(List<SimilarGroup> simGroupList) {
+		Set<FileEntry> resultSet = new HashSet<FileEntry>();
+		for (SimilarGroup simGroup : simGroupList) {
+			resultSet.add(simGroup.getFileEntry());
+		}
+		return resultSet;
 	}
-	public Set<FileEntry> select(Map<FileEntry, List<SimilarEntry>> similarMap) {
-		return new HashSet<FileEntry>(fileEntryList);
+}
+
+class StorageEntrySelecter implements EntrySelecter {
+	static final StorageEntrySelecter INSTANCE = new StorageEntrySelecter();
+	private StorageEntrySelecter() {}
+	public Set<FileEntry> select(List<SimilarGroup> simGroupList) {
+		Set<FileEntry> resultSet = new HashSet<FileEntry>();
+		for (SimilarGroup simGroup : simGroupList) {
+			for (SimilarEntry sim : simGroup.getSimilarList()) {
+				resultSet.add(sim.getFileEntry());
+			}
+		}
+		return resultSet;
 	}
 }
 
 class PickOneEntrySelecter implements EntrySelecter {
 	static final PickOneEntrySelecter INSTANCE = new PickOneEntrySelecter();
 	private PickOneEntrySelecter() {}
-	public Set<FileEntry> select(Map<FileEntry, List<SimilarEntry>> similarMap) {
+	public Set<FileEntry> select(List<SimilarGroup> simGroupList) {
 		Set<FileEntry> resultSet = new HashSet<FileEntry>();
-		Set<FileEntry> othersSet = new HashSet<FileEntry>();
-		for (Entry<FileEntry, List<SimilarEntry>> entry : similarMap.entrySet()) {
-			if (othersSet.contains(entry.getKey())) continue;
-			resultSet.add(entry.getKey());
-			for (SimilarEntry similar : entry.getValue()) {
-				othersSet.add(similar.getFileEntry());
+		groupList:
+		for (SimilarGroup simGroup : simGroupList) {
+			if (resultSet.contains(simGroup.getFileEntry())) continue;
+			for (SimilarEntry sim : simGroup.getSimilarList()) {
+				if (resultSet.contains(sim.getFileEntry())) continue groupList;
 			}
+			resultSet.add(simGroup.getFileEntry());
 		}
 		return resultSet;
 	}
@@ -64,12 +79,12 @@ abstract class MaxBasedEntrySelecter<T extends Comparable<? super T>> implements
 		this.order = order;
 	}
 	protected abstract T getContentScore(FileEntry file);
-	public Set<FileEntry> select(Map<FileEntry, List<SimilarEntry>> similarMap) {
+	public Set<FileEntry> select(List<SimilarGroup> simGroupList) {
 		Set<FileEntry> resultSet = new HashSet<FileEntry>();
-		for (Entry<FileEntry, List<SimilarEntry>> entry : similarMap.entrySet()) {
-			FileEntry maxFile = entry.getKey();
+		for (SimilarGroup simGroup : simGroupList) {
+			FileEntry maxFile = simGroup.getFileEntry();
 			T max = getContentScore(maxFile);
-			for (SimilarEntry similar : entry.getValue()) {
+			for (SimilarEntry similar : simGroup.getSimilarList()) {
 				FileEntry file = similar.getFileEntry();
 				T val = getContentScore(file);
 				int comp = val.compareTo(max) * order;
@@ -143,10 +158,10 @@ class LargerDistanceEntrySelecter implements EntrySelecter {
 	LargerDistanceEntrySelecter(int threshold) {
 		this.threshold = threshold;
 	}
-	public Set<FileEntry> select(Map<FileEntry, List<SimilarEntry>> similarMap) {
+	public Set<FileEntry> select(List<SimilarGroup> simGroupList) {
 		Set<FileEntry> resultSet = new HashSet<FileEntry>();
-		for (Entry<FileEntry, List<SimilarEntry>> entry : similarMap.entrySet()) {
-			for (SimilarEntry similar : entry.getValue()) {
+		for (SimilarGroup simGroup : simGroupList) {
+			for (SimilarEntry similar : simGroup.getSimilarList()) {
 				if (similar.getDistance() >= threshold) resultSet.add(similar.getFileEntry());
 			}
 		}
@@ -159,10 +174,10 @@ class SmallerDistanceEntrySelecter implements EntrySelecter {
 	SmallerDistanceEntrySelecter(int threshold) {
 		this.threshold = threshold;
 	}
-	public Set<FileEntry> select(Map<FileEntry, List<SimilarEntry>> similarMap) {
+	public Set<FileEntry> select(List<SimilarGroup> simGroupList) {
 		Set<FileEntry> resultSet = new HashSet<FileEntry>();
-		for (Entry<FileEntry, List<SimilarEntry>> entry : similarMap.entrySet()) {
-			for (SimilarEntry similar : entry.getValue()) {
+		for (SimilarGroup simGroup : simGroupList) {
+			for (SimilarEntry similar : simGroup.getSimilarList()) {
 				if (similar.getDistance() <= threshold) resultSet.add(similar.getFileEntry());
 			}
 		}
@@ -175,12 +190,12 @@ class PathFilterEntrySelecter implements EntrySelecter {
 	PathFilterEntrySelecter(String path) {
 		this.filterPath = path.toLowerCase();
 	}
-	public Set<FileEntry> select(Map<FileEntry, List<SimilarEntry>> similarMap) {
+	public Set<FileEntry> select(List<SimilarGroup> simGroupList) {
 		Set<FileEntry> resultSet = new HashSet<FileEntry>();
-		for (Entry<FileEntry, List<SimilarEntry>> entry : similarMap.entrySet()) {
-			FileEntry file = entry.getKey();
+		for (SimilarGroup simGroup : simGroupList) {
+			FileEntry file = simGroup.getFileEntry();
 			if (hit(file)) resultSet.add(file);
-			for (SimilarEntry similar : entry.getValue()) {
+			for (SimilarEntry similar : simGroup.getSimilarList()) {
 				FileEntry simFile = similar.getFileEntry();
 				if (hit(simFile)) resultSet.add(simFile);
 			}

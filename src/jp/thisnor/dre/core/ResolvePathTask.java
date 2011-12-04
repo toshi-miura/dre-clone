@@ -11,17 +11,14 @@ public class ResolvePathTask implements Runnable {
 	public static final String RECURSIVE_MARK = File.separator + File.separator;
 
 	private final List<String> pathList;
+	private final List<MeasureEntry> entryList;
 	private final PathFilter filter;
-	private final List<MeasureEntry> measureEntryList;
 	private final SynchronizedCounter counter;
 
-	public ResolvePathTask(
-			List<String> pathList, PathFilter filter,
-			List<MeasureEntry> masureEntryList,
-			SynchronizedCounter counter) {
+	public ResolvePathTask(List<String> pathList, List<MeasureEntry> entryList, PathFilter filter, SynchronizedCounter counter) {
 		this.pathList = pathList;
-		this.filter = filter != null ? filter : PathFilter.DEFAULT;
-		this.measureEntryList = masureEntryList;
+		this.entryList = entryList;
+		this.filter = filter;
 		this.counter = counter;
 	}
 
@@ -78,7 +75,7 @@ public class ResolvePathTask implements Runnable {
 
 	private void checkAndAddPath(String path) {
 		if (filter.accept(path)) {
-			measureEntryList.add(new MeasureEntry(new NormalFileEntry(new File(path))));
+			entryList.add(new MeasureEntry(new NormalFileEntry(new File(path))));
 		}
 	}
 }

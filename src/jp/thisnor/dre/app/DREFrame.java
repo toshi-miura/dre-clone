@@ -31,10 +31,6 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 
 class DREFrame {
-	private static final String
-		SOFTWARE_TITLE = "DeadRingerEraser",
-		SOFTWARE_VERSION = "0.3.0";
-
 	private static final String PREFERENCES_PATH = "prefs"; //$NON-NLS-1$
 
 	private static final String
@@ -130,7 +126,7 @@ class DREFrame {
 
 		Display display = new Display();
 		shell = new Shell(display);
-		shell.setText(SOFTWARE_TITLE + " " + SOFTWARE_VERSION);
+		shell.setText(Application.APP_NAME + " " + Application.VERSION);
 		shell.setSize(prefs.getInt(PREFS_SHELL_WIDTH_KEY), prefs.getInt(PREFS_SHELL_HEIGHT_KEY));
 		{
 			FormLayout l = new FormLayout();

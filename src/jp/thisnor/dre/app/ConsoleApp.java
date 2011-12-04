@@ -1,27 +1,21 @@
 package jp.thisnor.dre.app;
-/*
-
-package jp.thisnor.dre.gui;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 
-import jp.thisnor.dre.core.FileEntry;
 import jp.thisnor.dre.core.MeasureOptionEntry;
 import jp.thisnor.dre.core.MeasurerPackage;
 import jp.thisnor.dre.core.PathFilter;
 import jp.thisnor.dre.core.ProgressListener;
 import jp.thisnor.dre.core.SimilarEntry;
+import jp.thisnor.dre.core.SimilarGroup;
 import jp.thisnor.dre.core.WholeTask;
 
 class ConsoleApp {
@@ -50,6 +44,7 @@ class ConsoleApp {
 	};
 
 	ConsoleApp(String[] args) {
+		// Parse command line arguments
 		for (String arg : args) {
 			if (arg.startsWith("--package=")) {
 				packageName = arg.substring("--package=".length());
@@ -59,7 +54,7 @@ class ConsoleApp {
 				filter = textToFilter(arg.substring("--filter=".length()));
 			} else if (arg.startsWith("--package-option=")) {
 				optionStrMap = textToMap(arg.substring("--package-option=".length()));
-			} else if (arg.startsWith("--numthreads=")) {
+			} else if (arg.startsWith("--num-threads=")) {
 				try {
 					numThreads = Integer.parseInt(arg.substring("--numthreads=".length()));
 				} catch (NumberFormatException e) {
@@ -110,8 +105,9 @@ class ConsoleApp {
 	}
 
 	boolean run() {
+		// Load package
 		if (packageName == null) {
-			System.err.println("ERROR: Specify package with --package=**");
+			System.err.println("ERROR: Specify package with --package=*");
 		}
 		System.err.println("Loading the package...");
 		MeasurerPackage measurerPackage = null;
@@ -125,6 +121,7 @@ class ConsoleApp {
 		System.err.println("  package name: " + measurerPackage.getName());
 		System.err.println("  version: " + measurerPackage.getVersion());
 
+		// Load option map
 		Map<String, MeasureOptionEntry> optionMap = measurerPackage.getOptionMap();
 		if (optionStrMap != null) {
 			for (Entry<String, String> e : optionStrMap.entrySet()) {
@@ -143,7 +140,7 @@ class ConsoleApp {
 		}
 		System.err.println("Checking package options...");
 		for (MeasureOptionEntry option : optionMap.values()) {
-			System.err.printf("  %s (%s): %s%n", option.getName(), option.getKey(), option.getValue());
+			System.err.printf("  %s: %s%n", option.getKey(), option.getValue());
 		}
 
 		System.err.println("Doing detection...");
@@ -153,42 +150,44 @@ class ConsoleApp {
 				measurerPackage.getHandler(), optionMap, numThreads,
 				STDERR_PROGRESS_LISTENER
 				);
-		Map<FileEntry, List<SimilarEntry>> similarMap = null;
+		List<SimilarGroup> simGroupList = null;
 		try {
-			similarMap = task.call();
+			simGroupList = task.call();
 		} catch (InterruptedException e) {
 			System.err.println("Aborted");
 			return false;
 		}
 
-		Set<FileEntry> fileEntrySet = new TreeSet<FileEntry>();
-		for (Entry<NewFileEntry, List<SimilarEntry>> e : similarMap.entrySet()) {
-			fileEntrySet.add(e.getKey());
-			for (SimilarEntry sim : e.getValue()) {
-				fileEntrySet.add(sim.getFileEntry());
+		Map<String, Long> fidMap = new HashMap<String, Long>(simGroupList.size() * 2, 0.9f);
+		long genid = 0;
+		for (SimilarGroup simGroup : simGroupList) {
+			if (!fidMap.containsKey(simGroup.getFileEntry().getPath()))
+				fidMap.put(simGroup.getFileEntry().getPath(), genid++);
+			for (SimilarEntry sim : simGroup.getSimilarList()) {
+				if (!fidMap.containsKey(sim.getFileEntry().getPath()))
+					fidMap.put(sim.getFileEntry().getPath(), genid);
 			}
 		}
 
 		System.err.println("Writing the result...");
-		printInXML(fileEntrySet, similarMap);
+		printInXML(fidMap, simGroupList);
 
 		return true;
 	}
 
-	private void printInXML(Set<NewFileEntry> fileEntrySet, Map<NewFileEntry, List<SimilarEntry>>similarMap) {
+	private void printInXML(Map<String, Long> fidMap, List<SimilarGroup> simGroupList) {
 		System.out.println("<?xml version=\"1.0\"?>");
 		System.out.println("<result>");
-		for (NewFileEntry fileEntry : fileEntrySet) {
-			System.out.printf("  <file id=\"%d\" path=\"%s\" />%n", fileEntry.getID(), fileEntry.getPath());
+		for (Entry<String, Long> entry : fidMap.entrySet()) {
+			System.out.printf("  <file id=\"%d\" path=\"%s\" />%n", entry.getValue(), entry.getKey());
 		}
-		for (Entry<NewFileEntry, List<SimilarEntry>> entry : similarMap.entrySet()) {
-			System.out.printf("  <simgroup srcfile=\"%d\">%n", entry.getKey().getID());
-			for (SimilarEntry sim : entry.getValue()) {
-				System.out.printf("    <simitem distance=\"%d\" file=\"%d\" />%n", sim.getDistance(), sim.getFileEntry().getID());
+		for (SimilarGroup simGroup : simGroupList) {
+			System.out.printf("  <simgroup srcfile=\"%d\">%n", fidMap.get(simGroup.getFileEntry().getPath()));
+			for (SimilarEntry sim : simGroup.getSimilarList()) {
+				System.out.printf("    <simitem distance=\"%d\" file=\"%d\" />%n", sim.getDistance(), fidMap.get(sim.getFileEntry().getPath()));
 			}
 			System.out.println("  </simgroup>");
 		}
 		System.out.println("</result>");
 	}
 }
-*/

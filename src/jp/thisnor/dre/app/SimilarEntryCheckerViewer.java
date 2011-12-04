@@ -2,13 +2,13 @@ package jp.thisnor.dre.app;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import jp.thisnor.dre.core.FileEntry;
 import jp.thisnor.dre.core.SimilarEntry;
+import jp.thisnor.dre.core.SimilarGroup;
 
 import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.swt.SWT;
@@ -354,13 +354,13 @@ class SimilarEntryCheckerViewer {
 	private final SelectionListener CHECKER_INVOKE_BUTTON_SELECTED = new SelectionAdapter() {
 		@Override
 		public void widgetSelected(SelectionEvent event) {
-			final Map<FileEntry, List<SimilarEntry>> similarMap = frame.getPage(MeasureExecutePage.class).getSimilarMap();
+			final List<SimilarGroup> simGroupList = frame.getPage(MeasureExecutePage.class).getSimilarGroupList();
 
 			EntrySelecter selecter0 = null;
 			switch (getSelectedCondition()) {
 			case 0: selecter0 = AllEntrySelecter.INSTANCE; break;
-			case 1: selecter0 = new ListEntrySelecter(frame.getPage(FileEntrySelectPage.class).getTargetFileList()); break;
-			case 2: selecter0 = new ListEntrySelecter(frame.getPage(FileEntrySelectPage.class).getStorageFileList()); break;
+			case 1: selecter0 = TargetEntrySelecter.INSTANCE; break;
+			case 2: selecter0 = StorageEntrySelecter.INSTANCE; break;
 			case 3: selecter0 = PickOneEntrySelecter.INSTANCE; break;
 			case 4: selecter0 = (getSelectedFilename() == 0) ? FilenameEntrySelecter.LAST_SELECTER : FilenameEntrySelecter.EARLIEST_SELECTER; break;
 			case 5: selecter0 = (getSelectedCompress() == 0) ? CompressEntrySelecter.MAX_SELECTER : CompressEntrySelecter.MIN_SELECTER; break;
@@ -378,11 +378,12 @@ class SimilarEntryCheckerViewer {
 			invokeButton.setEnabled(false);
 			executor.execute(new Runnable() {
 				public void run() {
-					Set<FileEntry> selectedSet0 = selecter.select(similarMap);
+					Set<FileEntry> selectedSet0 = selecter.select(simGroupList);
 					if (inverse) {
-						Set<FileEntry> wholeSet = new HashSet<FileEntry>(similarMap.keySet());
-						for (List<SimilarEntry> l : similarMap.values()) {
-							for (SimilarEntry similar : l) {
+						Set<FileEntry> wholeSet = new HashSet<FileEntry>();
+						for (SimilarGroup simGroup : simGroupList) {
+							wholeSet.add(simGroup.getFileEntry());
+							for (SimilarEntry similar : simGroup.getSimilarList()) {
 								wholeSet.add(similar.getFileEntry());
 							}
 						}

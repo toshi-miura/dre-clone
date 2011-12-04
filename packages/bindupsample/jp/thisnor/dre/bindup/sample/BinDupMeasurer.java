@@ -43,7 +43,7 @@ public class BinDupMeasurer implements Measurer {
 	 * また、値が広くばらけるようにすると、比較処理のオーダーが線形に近づき、処理時間をより短くすることができる。
 	 */
 	@Override
-	public int measure(Object data1, Object data2) {
+	public int measure(Object data1, Object data2, int threshold) {
 		BinDupData bdData1 = (BinDupData)data1;
 		BinDupData bdData2 = (BinDupData)data2;
 		if (Arrays.equals(bdData1.buffer, bdData2.buffer)) {

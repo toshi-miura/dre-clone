@@ -1,14 +1,10 @@
 package jp.thisnor.dre.app;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,6 +12,7 @@ import java.util.concurrent.Executors;
 import jp.thisnor.dre.core.FileEntry;
 import jp.thisnor.dre.core.NormalFileEntry;
 import jp.thisnor.dre.core.SimilarEntry;
+import jp.thisnor.dre.core.SimilarGroup;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnWeightData;
@@ -62,7 +59,7 @@ class SimilarEntrySelectPage extends DREPage {
 	private ImagePreviewer previewer;
 	private SimilarEntryCheckerViewer checkerViewer;
 
-	private Map<FileEntry, List<SimilarEntry>> similarMap;
+	private List<SimilarGroup> simGroupList;
 	private Set<FileEntry> checkedFileSet;
 
 	private ExecutorService appendEntryExecutor;
@@ -194,13 +191,13 @@ class SimilarEntrySelectPage extends DREPage {
 			checkedFileSet.addAll(fileEntrySet);
 			break;
 		case -1: // check turn
-			checkedFileSet = new HashSet<FileEntry>(similarMap.keySet());
-			for (List<SimilarEntry> l : similarMap.values()) {
-				for (SimilarEntry similar : l) {
-					checkedFileSet.add(similar.getFileEntry());
+			for (FileEntry entry : fileEntrySet) {
+				if (checkedFileSet.contains(entry)) {
+					checkedFileSet.remove(entry);
+				} else {
+					checkedFileSet.add(entry);
 				}
 			}
-			checkedFileSet.removeAll(fileEntrySet);
 			break;
 		}
 		updateFileTableCheckState();
@@ -219,9 +216,8 @@ class SimilarEntrySelectPage extends DREPage {
 
 	void updateFileTableCheckState() {
 		for (TableItem item : fileEntryTable.getItems()) {
-			@SuppressWarnings("unchecked")
-			Entry<FileEntry, List<SimilarEntry>> entry = (Entry<FileEntry, List<SimilarEntry>>)item.getData();
-			item.setChecked(checkedFileSet.contains(entry.getKey()));
+			SimilarGroup simGroup = (SimilarGroup)item.getData();
+			item.setChecked(checkedFileSet.contains(simGroup.getFileEntry()));
 		}
 	}
 
@@ -233,16 +229,15 @@ class SimilarEntrySelectPage extends DREPage {
 	}
 
 	private void setActiveFileEntryItem(TableItem item) {
-		@SuppressWarnings("unchecked")
-		Entry<FileEntry, List<SimilarEntry>> entry = (Entry<FileEntry, List<SimilarEntry>>)item.getData();
-		similarEntryTableViewer.setInput(entry);
+		SimilarGroup simGroup = (SimilarGroup)item.getData();
+		similarEntryTableViewer.setInput(simGroup);
 		similarEntryTableViewer.getTable().setSelection(0);
 		for (TableItem simItem : similarEntryTableViewer.getTable().getItems()) {
 			SimilarEntry similar = (SimilarEntry)simItem.getData();
 			if (checkedFileSet.contains(similar.getFileEntry())) simItem.setChecked(true);
 		}
-		previewer.setFileEntry(entry.getKey());
-		similarEntryLabel.setText(messages.getString("SimilarEntrySelectPage.SIMILAR_TABLE_CAPTION") + " (" + (entry.getValue().size() + 1) + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+		previewer.setFileEntry(simGroup.getFileEntry());
+		similarEntryLabel.setText(messages.getString("SimilarEntrySelectPage.SIMILAR_TABLE_CAPTION") + " (" + (simGroup.getSimilarList().size() + 1) + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 		similarEntryComp.layout();
 	}
 
@@ -254,26 +249,22 @@ class SimilarEntrySelectPage extends DREPage {
 		frame.setNextButtonEnabled(true);
 		frame.setPreviousButtonEnabled(true);
 
-		similarMap = frame.getPage(MeasureExecutePage.class).getSimilarMap();
-		for (Iterator<Entry<FileEntry, List<SimilarEntry>>> it = similarMap.entrySet().iterator(); it.hasNext(); ) {
-			Entry<FileEntry, List<SimilarEntry>> entry = it.next();
-			FileEntry fileEntry = entry.getKey();
-			if (fileEntry instanceof NormalFileEntry) {
-				if (!new File(fileEntry.getPath()).exists()) {
-					it.remove();
-					continue;
-				}
+		simGroupList = frame.getPage(MeasureExecutePage.class).getSimilarGroupList();
+		for (Iterator<SimilarGroup> it = simGroupList.iterator(); it.hasNext(); ) {
+			SimilarGroup simGroup = it.next();
+			FileEntry fileEntry = simGroup.getFileEntry();
+			if (fileEntry instanceof NormalFileEntry && !new File(fileEntry.getPath()).exists()) {
+				it.remove();
+				continue;
 			}
-			List<SimilarEntry> similarList = entry.getValue();
-			for (Iterator<SimilarEntry> it2 = similarList.iterator(); it2.hasNext(); ) {
+			List<SimilarEntry> simList = simGroup.getSimilarList();
+			for (Iterator<SimilarEntry> it2 = simList.iterator(); it2.hasNext(); ) {
 				FileEntry simFileEntry = it2.next().getFileEntry();
-				if (simFileEntry instanceof NormalFileEntry) {
-					if (!new File(simFileEntry.getPath()).exists()) {
-						it2.remove();
-					}
+				if (simFileEntry instanceof NormalFileEntry && !new File(simFileEntry.getPath()).exists()) {
+					it2.remove();
 				}
 			}
-			if (similarList.isEmpty()) {
+			if (simList.isEmpty()) {
 				it.remove();
 			}
 		}
@@ -283,7 +274,7 @@ class SimilarEntrySelectPage extends DREPage {
 		previewer.setFileEntry(null);
 		checkedFileSet.clear();
 
-		fileEntryLabel.setText(messages.getString("SimilarEntrySelectPage.FILE_TABLE_CAPTION") + " (" + similarMap.size() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+		fileEntryLabel.setText(messages.getString("SimilarEntrySelectPage.FILE_TABLE_CAPTION") + " (" + simGroupList.size() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 		fileEntryComp.layout();
 		similarEntryLabel.setText(messages.getString("SimilarEntrySelectPage.SIMILAR_TABLE_CAPTION"));
 		similarEntryComp.layout();
@@ -322,21 +313,19 @@ class SimilarEntrySelectPage extends DREPage {
 
 	private final Runnable APPEND_ENTRIES_TASK = new Runnable() {
 		public void run() {
-			List<Entry<FileEntry, List<SimilarEntry>>> list = new ArrayList<Entry<FileEntry, List<SimilarEntry>>>(similarMap.entrySet());
-			Collections.sort(list, SIMILAR_MAP_COMPARATOR);
 			boolean first = true;
 			int waitCounter = 32;
-			for (final Entry<FileEntry, List<SimilarEntry>> entry : list) {
+			for (final SimilarGroup entry : simGroupList) {
 				final boolean ffirst = first;
 				first = false;
 				Display.getDefault().syncExec(new Runnable() {
 					public void run() {
 						if (fileEntryTable.isDisposed()) return;
 						TableItem item = new TableItem(fileEntryTable, SWT.NONE);
-						item.setText(0, entry.getKey().getName());
-						item.setText(1,	Integer.toString(entry.getValue().get(0).getDistance()));
+						item.setText(0, entry.getFileEntry().getName());
+						item.setText(1,	Integer.toString(entry.getSimilarList().get(0).getDistance()));
 						item.setData(entry);
-						if (checkedFileSet.contains(entry.getKey())) {
+						if (checkedFileSet.contains(entry.getFileEntry())) {
 							item.setChecked(true);
 						}
 						if (ffirst) {
@@ -354,26 +343,6 @@ class SimilarEntrySelectPage extends DREPage {
 					waitCounter = 32;
 				}
 			}
-		}
-	};
-
-	private final Comparator<Entry<FileEntry, List<SimilarEntry>>> SIMILAR_MAP_COMPARATOR = new Comparator<Entry<FileEntry, List<SimilarEntry>>>() {
-		@Override
-		public int compare(Entry<FileEntry, List<SimilarEntry>> o1, Entry<FileEntry, List<SimilarEntry>> o2) {
-			int mind1 = o1.getValue().get(0).getDistance();
-			int mind2 = o2.getValue().get(0).getDistance();
-			if (mind1 != mind2) {
-				return mind1 > mind2 ? 1 : -1;
-			}
-			int minh1 = o1.getKey().hashCode();
-			for (SimilarEntry entry : o1.getValue()) {
-				if (entry.getFileEntry().hashCode() < minh1) minh1 = entry.getFileEntry().hashCode();
-			}
-			int minh2 = o2.getKey().hashCode();
-			for (SimilarEntry entry : o2.getValue()) {
-				if (entry.getFileEntry().hashCode() < minh2) minh2 = entry.getFileEntry().hashCode();
-			}
-			return minh1 > minh2 ? 1 : (minh1 == minh2 ? 0 : -1);
 		}
 	};
 
@@ -397,12 +366,11 @@ class SimilarEntrySelectPage extends DREPage {
 	private final IContentProvider SIMILAR_TABLE_CONTENT_PROVIDER = new ArrayContentProvider() {
 		@Override
 		public Object[] getElements(Object inputElement) {
-			@SuppressWarnings("unchecked")
-			Entry<FileEntry, List<SimilarEntry>> entry = (Entry<FileEntry, List<SimilarEntry>>)inputElement;
-			Object[] array = new Object[entry.getValue().size() + 1];
-			array[0] = new SimilarEntry(entry.getKey(), 0);
+			SimilarGroup simGroup = (SimilarGroup)inputElement;
+			Object[] array = new Object[simGroup.getSimilarList().size() + 1];
+			array[0] = new SimilarEntry(simGroup.getFileEntry(), 0);
 			for (int i = 1; i < array.length; i++) {
-				array[i] = entry.getValue().get(i - 1);
+				array[i] = simGroup.getSimilarList().get(i - 1);
 			}
 			return array;
 		}
@@ -462,8 +430,7 @@ class SimilarEntrySelectPage extends DREPage {
 		public void widgetSelected(SelectionEvent event) {
 			if (event.detail != SWT.CHECK) return;
 			TableItem item = (TableItem)event.item;
-			@SuppressWarnings("unchecked")
-			FileEntry file = ((Entry<FileEntry, List<SimilarEntry>>)item.getData()).getKey();
+			FileEntry file = ((SimilarGroup)item.getData()).getFileEntry();
 			setFileChecked(file, item.getChecked());
 		}
 	};

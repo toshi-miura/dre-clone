@@ -20,7 +20,7 @@ public class BinDupMeasurer implements Measurer {
 	}
 
 	@Override
-	public int measure(Object data1, Object data2) {
+	public int measure(Object data1, Object data2, int threshold) {
 		FileEntry entry1 = (FileEntry)data1;
 		FileEntry entry2 = (FileEntry)data2;
 		if (entry1.equals(entry2)) return 0;

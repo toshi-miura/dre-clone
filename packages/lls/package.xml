@@ -3,7 +3,7 @@
 	<information>
 		<key>jp.thisnor.dre.lls</key>
 		<name>Loose Luminance Similarity</name>
-		<version>1.1</version>
+		<version>1.2</version>
 		<author>jp.thisnor</author>
 		<caption lang="ja">類似検出アルゴリズム</caption>
 		<description lang="ja">よく似た画像を検出するためのアルゴリズムです。スケール変換、色相変換、ワンポイントやテロップ・文字などが追加された画像も含めて検出します。この方法では、正規化された輝度を特徴量として用います。</description>

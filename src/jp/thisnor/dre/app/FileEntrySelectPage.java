@@ -1,11 +1,9 @@
 package jp.thisnor.dre.app;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import jp.thisnor.dre.core.FileEntry;
 import jp.thisnor.dre.core.PathFilter;
 
 import org.eclipse.jface.preference.PreferenceStore;
@@ -140,32 +138,14 @@ public class FileEntrySelectPage extends DREPage {
 	}
 
 	void hiddened() {
-		final String filterRegex = extFilterText.getText();
-		FilenameFilter filter = extFilterCheck.getSelection() ?
-				new FilenameFilter() {
-					@Override
-					public boolean accept(File dir, String name) {
-						boolean match = name.matches(filterRegex);
-						return match;
-					}
-				} :
-				new FilenameFilter() {
-					@Override
-					public boolean accept(File dir, String name) {
-						return true;
-					}
-				};
-		targetFileListViewer.computeFileEntryList(filter, true);
-		storageFileListViewer.computeFileEntryList(filter, true);
-
 		PreferenceStore prefs = frame.getPreferences();
 		prefs.setValue(PREFS_SAME_TARGET_KEY, sameTargetCheck.getSelection());
 		prefs.setValue(PREFS_USE_EXTENSION_FILTER_KEY, extFilterCheck.getSelection());
 		prefs.setValue(PREFS_EXTENSION_FILTER_KEY, extFilterText.getText());
 		if (prefs.getBoolean(PREFS_TARGET_FILES_KEY + ".save")) //$NON-NLS-1$
-			prefs.setValue(PREFS_TARGET_FILES_KEY, fileEntryListToText(targetFileListViewer.getRawFileEntryList()));
+			prefs.setValue(PREFS_TARGET_FILES_KEY, fileEntryListToText(targetFileListViewer.getExtPathList()));
 		if (prefs.getBoolean(PREFS_SOURCE_FILES_KEY + ".save")) //$NON-NLS-1$
-			prefs.setValue(PREFS_SOURCE_FILES_KEY, fileEntryListToText(storageFileListViewer.getRawFileEntryList()));
+			prefs.setValue(PREFS_SOURCE_FILES_KEY, fileEntryListToText(storageFileListViewer.getExtPathList()));
 	}
 
 	void nextRequested() {
@@ -182,24 +162,14 @@ public class FileEntrySelectPage extends DREPage {
 		storageFileListViewer.dispose();
 	}
 
-	List<String> getRawTargetFileList() {
-		return targetFileListViewer.getRawFileEntryList();
+	List<String> getExtTargetFileList() {
+		return targetFileListViewer.getExtPathList();
 	}
 
-	List<String> getRawStorageFileList() {
+	List<String> getExtStorageFileList() {
 		return sameTargetCheck.getSelection() ?
-				getRawTargetFileList() :
-				storageFileListViewer.getRawFileEntryList();
-	}
-
-	List<FileEntry> getTargetFileList() {
-		return targetFileListViewer.getFileEntryList();
-	}
-
-	List<FileEntry> getStorageFileList() {
-		return sameTargetCheck.getSelection() ?
-				getTargetFileList() :
-				storageFileListViewer.getFileEntryList();
+				getExtTargetFileList() :
+				storageFileListViewer.getExtPathList();
 	}
 
 	PathFilter getPathFilter() {

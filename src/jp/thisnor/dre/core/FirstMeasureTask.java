@@ -19,7 +19,7 @@ public class FirstMeasureTask implements Runnable {
 		int index;
 		while ((index = counter.countup()) < entryList.size()) {
 			MeasureEntry entry = entryList.get(index);
-			entry.firstDistance = measurer.measure(firstEntry.data, entry.data);
+			entry.firstDistance = measurer.measure(firstEntry.data, entry.data, Integer.MAX_VALUE);
 			if (Thread.interrupted()) return;
 		}
 	}
