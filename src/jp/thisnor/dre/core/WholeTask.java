@@ -40,8 +40,7 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 		this.storageList = storageList;
 		this.filter = filter;
 		this.measurer = measurer;
-		this.optionMap = Collections.synchronizedMap(new HashMap<String, MeasureOptionEntry>(optionMap.size(), 2.0f));
-		this.optionMap.putAll(optionMap);
+		this.optionMap = new HashMap<String, MeasureOptionEntry>(optionMap);
 		this.numThreads = numThreads;
 		this.logger = logger;
 	}
@@ -51,7 +50,7 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 		SynchronizedCounter counter;
 
 		// Generate MeasureEntry
-		List<MeasureEntry> targetEntryList = Collections.synchronizedList(new ArrayList<MeasureEntry>());
+		List<MeasureEntry> targetEntryList = new ArrayList<MeasureEntry>();
 		List<MeasureEntry> storageEntryList = null;
 		executor = Executors.newFixedThreadPool(numThreads);
 		if (storageList == null || storageList == targetList) {
@@ -61,7 +60,7 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 				executor.submit(new ResolvePathTask(targetList, targetEntryList, filter, counter));
 			}
 		} else {
-			storageEntryList = Collections.synchronizedList(new ArrayList<MeasureEntry>());
+			storageEntryList = new ArrayList<MeasureEntry>();
 			counter = new SynchronizedCounter();
 			for (int i = 0; i < numThreads; i++) {
 				executor.submit(new ResolvePathTask(targetList, targetEntryList, filter, counter));

@@ -77,18 +77,18 @@ public class FileEntrySelectPage extends DREPage {
 			rightComp.setLayout(l);
 		}
 
-		Group sourceComp = new Group(rightComp, SWT.NONE);
-		sourceComp.setText(messages.getString("FileEntrySelectPage.SOURCE_TABLE_CAPTION"));
+		Group storageComp = new Group(rightComp, SWT.NONE);
+		storageComp.setText(messages.getString("FileEntrySelectPage.SOURCE_TABLE_CAPTION"));
 		{
 			FormLayout l = new FormLayout();
 			l.marginWidth = l.marginHeight = 8;
 			l.spacing = 8;
-			sourceComp.setLayout(l);
+			storageComp.setLayout(l);
 		}
 
-		storageFileListViewer = new FileDropListViewer(frame, sourceComp);
+		storageFileListViewer = new FileDropListViewer(frame, storageComp);
 
-		sameTargetCheck = new Button(sourceComp, SWT.CHECK);
+		sameTargetCheck = new Button(storageComp, SWT.CHECK);
 		sameTargetCheck.setText(messages.getString("FileEntrySelectPage.TARGET_AS_SOURCE_BUTTON_TEXT"));
 		sameTargetCheck.addSelectionListener(UPDATE_CONTENTS_ENABLED);
 
@@ -109,7 +109,7 @@ public class FileEntrySelectPage extends DREPage {
 		extFilterCheck.setLayoutData(new FormDataBuilder().left(0).top(0).build());
 		extFilterText.setLayoutData(new FormDataBuilder().left(extFilterCheck).right(100).top(0).build());
 
-		sourceComp.setLayoutData(new FormDataBuilder().left(0).right(100).top(0).bottom(extFilterComp).build());
+		storageComp.setLayoutData(new FormDataBuilder().left(0).right(100).top(0).bottom(extFilterComp).build());
 		extFilterComp.setLayoutData(new FormDataBuilder().left(0).right(100).bottom(100).build());
 
 		sameTargetCheck.setSelection(prefs.getBoolean(PREFS_SAME_TARGET_KEY));

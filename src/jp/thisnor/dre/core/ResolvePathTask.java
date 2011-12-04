@@ -75,7 +75,9 @@ public class ResolvePathTask implements Runnable {
 
 	private void checkAndAddPath(String path) {
 		if (filter.accept(path)) {
-			entryList.add(new MeasureEntry(new NormalFileEntry(new File(path))));
+			synchronized (entryList) {
+				entryList.add(new MeasureEntry(new NormalFileEntry(new File(path))));
+			}
 		}
 	}
 }
