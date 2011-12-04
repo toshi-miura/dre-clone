@@ -27,6 +27,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class MeasurerPackage {
+	private static final String PACKAGE_DIR = "packages";
+
 	private final String key;
 	private final String name;
 	private final String version;
@@ -83,6 +85,18 @@ public class MeasurerPackage {
 
 	public Map<String, MeasureOptionEntry> getOptionMap() {
 		return optionMap;
+	}
+
+	public static MeasurerPackage importPackage(String packageName) throws IOException {
+		try {
+			if (new File(PACKAGE_DIR, packageName).isDirectory()) {
+				return importDirPackage(new File(PACKAGE_DIR, packageName));
+			} else {
+				return importJarPackage(new File(PACKAGE_DIR, packageName + ".jar"));
+			}
+		} catch (Exception e) {
+			throw new IOException(String.format("Failed in loading package: %s.", packageName), e);
+		}
 	}
 
 	public static MeasurerPackage importPackage(File packageFile) throws IOException {

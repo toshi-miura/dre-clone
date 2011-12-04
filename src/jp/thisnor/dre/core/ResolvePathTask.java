@@ -18,7 +18,7 @@ public class ResolvePathTask implements Runnable {
 	public ResolvePathTask(List<String> pathList, List<MeasureEntry> entryList, PathFilter filter, SynchronizedCounter counter) {
 		this.pathList = pathList;
 		this.entryList = entryList;
-		this.filter = filter;
+		this.filter = filter != null ? filter : PathFilter.DEFAULT;
 		this.counter = counter;
 	}
 

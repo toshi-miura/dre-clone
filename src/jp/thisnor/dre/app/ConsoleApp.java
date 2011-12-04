@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -19,9 +20,6 @@ import jp.thisnor.dre.core.SimilarGroup;
 import jp.thisnor.dre.core.WholeTask;
 
 class ConsoleApp {
-	private static final String
-		PACKAGE_DIR = "packages";
-
 	private String packageName;
 	private List<String> targetPathList, storagePathList;
 	private PathFilter filter;
@@ -112,7 +110,7 @@ class ConsoleApp {
 		System.err.println("Loading the package...");
 		MeasurerPackage measurerPackage = null;
 		try {
-			measurerPackage = MeasurerPackage.importPackage(new File(PACKAGE_DIR + File.separator + packageName));
+			measurerPackage = MeasurerPackage.importPackage(packageName);
 		} catch (IOException e) {
 			System.err.println("ERROR: Not found specified package: " + packageName);
 			return false;
@@ -158,14 +156,14 @@ class ConsoleApp {
 			return false;
 		}
 
-		Map<String, Long> fidMap = new HashMap<String, Long>(simGroupList.size() * 2, 0.9f);
+		Map<String, Long> fidMap = new LinkedHashMap<String, Long>(simGroupList.size() * 2, 0.9f);
 		long genid = 0;
 		for (SimilarGroup simGroup : simGroupList) {
 			if (!fidMap.containsKey(simGroup.getFileEntry().getPath()))
 				fidMap.put(simGroup.getFileEntry().getPath(), genid++);
 			for (SimilarEntry sim : simGroup.getSimilarList()) {
 				if (!fidMap.containsKey(sim.getFileEntry().getPath()))
-					fidMap.put(sim.getFileEntry().getPath(), genid);
+					fidMap.put(sim.getFileEntry().getPath(), genid++);
 			}
 		}
 
@@ -179,10 +177,10 @@ class ConsoleApp {
 		System.out.println("<?xml version=\"1.0\"?>");
 		System.out.println("<result>");
 		for (Entry<String, Long> entry : fidMap.entrySet()) {
-			System.out.printf("  <file id=\"%d\" path=\"%s\" />%n", entry.getValue(), entry.getKey());
+			System.out.printf("  <file id=\"%d\" path=\"%s\" />%n", entry.getValue(), new File(entry.getKey()).getAbsolutePath());
 		}
 		for (SimilarGroup simGroup : simGroupList) {
-			System.out.printf("  <simgroup srcfile=\"%d\">%n", fidMap.get(simGroup.getFileEntry().getPath()));
+			System.out.printf("  <simgroup file=\"%d\">%n", fidMap.get(simGroup.getFileEntry().getPath()));
 			for (SimilarEntry sim : simGroup.getSimilarList()) {
 				System.out.printf("    <simitem distance=\"%d\" file=\"%d\" />%n", sim.getDistance(), fidMap.get(sim.getFileEntry().getPath()));
 			}
