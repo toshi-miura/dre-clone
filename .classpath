@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="jp/thisnor/dre/core/FileEntrySelectPage_FileTreeViewer.java|jp/thisnor/dre/core/FileTreeViewer.java|jp/thisnor/dre/core/MeasureExecutePage0.java|jp/thisnor/dre/core/MeasureExecutePage2D.java|jp/thisnor/dre/core/Detector.java" kind="src" path="src"/>
+	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" output="packages/bindupsample" path="packages/bindupsample"/>
 	<classpathentry kind="src" output="packages/bindup" path="packages/bindup"/>
-	<classpathentry excluding="jp/thisnor/dre/gray64/Gray64HandlerSQLiteJDBC.java|jp/thisnor/dre/gray64/Gray64Measurer0.java|jp/thisnor/dre/gray64/Gray64MeasurerSQLJet.java|jp/thisnor/dre/gray64/Gray64Measurer1.java|jp/thisnor/dre/simimg/Gray64HandlerSQLiteJDBC.java|jp/thisnor/dre/simimg/Gray64Measurer0.java|jp/thisnor/dre/simimg/Gray64Measurer1.java|jp/thisnor/dre/simimg/Gray64MeasurerSQLJet.java|lang/|jp/thisnor/dre/lumsim/Gray64HandlerSQLiteJDBC.java|jp/thisnor/dre/lumsim/Gray64Measurer0.java|jp/thisnor/dre/lumsim/Gray64Measurer1.java|jp/thisnor/dre/lumsim/Gray64MeasurerSQLJet.java|jp/thisnor/dre/lls/Gray64HandlerSQLiteJDBC.java|jp/thisnor/dre/lls/Gray64Measurer0.java|jp/thisnor/dre/lls/Gray64Measurer1.java|jp/thisnor/dre/lls/Gray64MeasurerSQLJet.java" kind="src" output="packages/lls" path="packages/lls"/>
+	<classpathentry kind="src" output="packages/lls" path="packages/lls"/>
 	<classpathentry kind="src" output="packages/pixeldup" path="packages/pixeldup"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.core.commands_3.6.0.I20100512-1500.jar"/>

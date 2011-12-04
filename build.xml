@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. -->
+<project basedir="." default="build" name="DeadRingerEraser2011">
+    <property environment="env"/>
+    <property name="ECLIPSE_HOME" value="../../../../Apps/eclipse3.6"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+    <path id="DeadRingerEraser2011.classpath">
+        <pathelement location="bin"/>
+        <pathelement location="packages/bindupsample"/>
+        <pathelement location="packages/bindup"/>
+        <pathelement location="packages/lls"/>
+        <pathelement location="packages/pixeldup"/>
+        <pathelement location="lib/org.eclipse.core.commands_3.6.0.I20100512-1500.jar"/>
+        <pathelement location="lib/org.eclipse.equinox.common_3.6.0.v20100503.jar"/>
+        <pathelement location="lib/org.eclipse.jface_3.6.1.M20100825-0800.jar"/>
+        <pathelement location="lib/swt64.jar"/>
+        <pathelement location="lib/antlr-runtime-3.1.3.jar"/>
+        <pathelement location="lib/sqlite-jdbc-3.6.20.1.jar"/>
+    </path>
+    <target name="init">
+        <mkdir dir="bin"/>
+        <mkdir dir="packages/bindupsample"/>
+        <mkdir dir="packages/bindup"/>
+        <mkdir dir="packages/lls"/>
+        <mkdir dir="packages/pixeldup"/>
+        <copy includeemptydirs="false" todir="bin">
+            <fileset dir="src">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+        <copy includeemptydirs="false" todir="packages/bindupsample">
+            <fileset dir="packages/bindupsample">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+        <copy includeemptydirs="false" todir="packages/bindup">
+            <fileset dir="packages/bindup">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+        <copy includeemptydirs="false" todir="packages/lls">
+            <fileset dir="packages/lls">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+        <copy includeemptydirs="false" todir="packages/pixeldup">
+            <fileset dir="packages/pixeldup">
+                <exclude name="**/*.launch"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="bin"/>
+        <delete dir="packages/bindupsample"/>
+        <delete dir="packages/bindup"/>
+        <delete dir="packages/lls"/>
+        <delete dir="packages/pixeldup"/>
+    </target>
+    <target depends="clean" name="cleanall"/>
+    <target depends="build-subprojects,build-project" name="build"/>
+    <target name="build-subprojects"/>
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
+            <src path="src"/>
+            <classpath refid="DeadRingerEraser2011.classpath"/>
+        </javac>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="packages/bindupsample" source="${source}" target="${target}">
+            <src path="packages/bindupsample"/>
+            <classpath refid="DeadRingerEraser2011.classpath"/>
+        </javac>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="packages/bindup" source="${source}" target="${target}">
+            <src path="packages/bindup"/>
+            <classpath refid="DeadRingerEraser2011.classpath"/>
+        </javac>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="packages/lls" source="${source}" target="${target}">
+            <src path="packages/lls"/>
+            <classpath refid="DeadRingerEraser2011.classpath"/>
+        </javac>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="packages/pixeldup" source="${source}" target="${target}">
+            <src path="packages/pixeldup"/>
+            <classpath refid="DeadRingerEraser2011.classpath"/>
+        </javac>
+    </target>
+    <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
+    <target description="copy Eclipse compiler jars to ant lib directory" name="init-eclipse-compiler">
+        <copy todir="${ant.library.dir}">
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </copy>
+        <unzip dest="${ant.library.dir}">
+            <patternset includes="jdtCompilerAdapter.jar"/>
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </unzip>
+    </target>
+    <target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
+        <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
+        <antcall target="build"/>
+    </target>
+    <target name="DRE GUI">
+        <java classname="jp.thisnor.dre.app.Application" failonerror="true" fork="yes">
+            <classpath refid="DeadRingerEraser2011.classpath"/>
+        </java>
+    </target>
+</project>
