@@ -3,7 +3,7 @@
 	<information>
 		<key>jp.thisnor.dre.pixeldup</key>
 		<name>Pixel Duplication</name>
-		<version>1.0</version>
+		<version>1.1</version>
 		<author>jp.thisnor</author>
 		<caption lang="ja">ピクセル完全一致画像の検出アルゴリズム</caption>
 		<description lang="ja">ファイル内容をピクセルレベルで比較します。</description>
@@ -14,12 +14,6 @@
 		<measurer>jp.thisnor.dre.pixeldup.PixelDupMeasurer</measurer>
 	</class>
 	<options>
-		<option>
-			<key>threshold</key>
-			<name lang="ja">スレッショルド</name>
-			<name lang="en">Threshold</name>
-			<default>1</default>
-		</option>
 		<option>
 			<key>hashAlgorithm</key>
 			<name lang="ja">ハッシュアルゴリズム</name>

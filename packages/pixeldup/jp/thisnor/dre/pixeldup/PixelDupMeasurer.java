@@ -46,6 +46,10 @@ public class PixelDupMeasurer implements Measurer {
 			initDB();
 			storeCacheQueue = new ConcurrentLinkedQueue<CacheEntry>();
 		}
+
+		MeasureOptionEntry thresholdOption = new MeasureOptionEntry("threshold");
+		thresholdOption.setValue("1");
+		optionMap.put("threshold", thresholdOption);
 	}
 
 	@Override
@@ -61,14 +65,14 @@ public class PixelDupMeasurer implements Measurer {
 			in = fileEntry.open();
 			srcImage = ImageIO.read(in);
 		} catch (IOException e) {
-			throw new IOException("ファイルの読み込みに失敗しました。", e);
+			throw new IOException(String.format("Failed to read image file: %s.", fileEntry.getPath()), e);
 		} finally {
 			try {
 				if (in != null) in.close();
 			} catch (IOException e) {}
 		}
 		if (srcImage == null) {
-			throw new IOException("ファイルの読み込みに失敗しました。");
+			throw new IOException(String.format("Failed to read image file: %s.", fileEntry.getPath()));
 		}
 
 		ColorModel cm = srcImage.getColorModel();
@@ -109,8 +113,9 @@ public class PixelDupMeasurer implements Measurer {
 		int len = Math.min(data1.hash.length, data2.hash.length);
 		int sum = 0;
 		for (int i = 0; i < len; i++) {
-			int d = (int)(data1.hash[i] - data2.hash[i]);
+			int d = (int)data1.hash[i] - (int)data2.hash[i];
 			sum += Math.abs(d);
+			if (sum > threshold) break;
 		}
 		return sum;
 	}
@@ -129,19 +134,17 @@ public class PixelDupMeasurer implements Measurer {
 			if (!CACHE_DIR.exists()) {
 				CACHE_DIR.mkdirs();
 			}
-			if (!CACHE_FILE.exists()) {
-				Connection conn = null;
+			Connection conn = null;
+			try {
+				conn = DriverManager.getConnection("jdbc:sqlite:" + CACHE_FILE.getPath());
+				Statement stat = conn.createStatement();
+				stat.execute("CREATE TABLE IF NOT EXISTS " + TABLE_NAME + "(name TEXT, date INTEGER, hash BLOB);");
+				stat.execute("CREATE INDEX IF NOT EXISTS id_date_size on " + TABLE_NAME + "(name, date);");
+				conn.close();
+			} finally {
 				try {
-					conn = DriverManager.getConnection("jdbc:sqlite:" + CACHE_FILE.getPath());
-					Statement stat = conn.createStatement();
-					stat.execute("CREATE TABLE " + TABLE_NAME + "(date INTEGER, size INTEGER, hash BLOB);");
-					stat.execute("CREATE INDEX id_date_size on " + TABLE_NAME + "(date, size);");
-					conn.close();
-				} finally {
-					try {
-						if (conn != null) conn.close();
-					} catch (SQLException e) {}
-				}
+					if (conn != null) conn.close();
+				} catch (SQLException e) {}
 			}
 		} catch (Exception e) {
 			useCache = false;
@@ -153,7 +156,9 @@ public class PixelDupMeasurer implements Measurer {
 		try {
 			conn = DriverManager.getConnection("jdbc:sqlite:" + CACHE_FILE.getPath());
 			Statement stat = conn.createStatement();
-			ResultSet res = stat.executeQuery("SELECT hash FROM " + TABLE_NAME + " WHERE date = " + entry.getLastModified() + " AND size = " + entry.getSize() + ";");
+			ResultSet res = stat.executeQuery(String.format(
+					"SELECT hash FROM %s WHERE name = %s AND date = %s;",
+					TABLE_NAME, entry.getName(), entry.getLastModified()));
 			if (!res.next()) return null;
 			byte[] hash = res.getBytes(1);
 			if (res.next()) return null;
@@ -189,7 +194,9 @@ public class PixelDupMeasurer implements Measurer {
 			conn.setAutoCommit(false);
 			CacheEntry cacheEntry = null;
 			while ((cacheEntry = storeCacheQueue.poll()) != null) {
-				PreparedStatement stat = conn.prepareStatement("INSERT INTO " + TABLE_NAME + " VALUES(" + cacheEntry.fileEntry.getLastModified() + ", " + cacheEntry.fileEntry.getSize() + ", ?);");
+				PreparedStatement stat = conn.prepareStatement(String.format(
+						"INSERT INTO %s VALUES(%s, %s, ?);",
+						TABLE_NAME, cacheEntry.fileEntry.getName(), cacheEntry.fileEntry.getLastModified()));
 				stat.setBytes(1, cacheEntry.data.hash);
 				stat.executeUpdate();
 			}
