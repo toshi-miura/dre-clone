@@ -14,11 +14,5 @@
 		<measurer>jp.thisnor.dre.bindup.BinDupMeasurer</measurer>
 	</class>
 	<options>
-		<option>
-			<key>threshold</key>
-			<name lang="ja">スレッショルド</name>
-			<name lang="en">Threshold</name>
-			<default>1</default>
-		</option>
 	</options>
 </package>

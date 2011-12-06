@@ -18,7 +18,7 @@
 		<option>
 			<key>threshold</key>
 			<name>スレッショルド</name>
-			<default>1</default>
+			<default>0</default>
 			<!--
 			<select>
 				<value>0</value>

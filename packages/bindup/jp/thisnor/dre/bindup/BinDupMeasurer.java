@@ -12,6 +12,9 @@ import jp.thisnor.dre.core.MeasureOptionEntry;
 public class BinDupMeasurer implements Measurer {
 	@Override
 	public void init(Map<String, MeasureOptionEntry> optionMap) {
+		MeasureOptionEntry thresholdOption = new MeasureOptionEntry("threshold");
+		thresholdOption.setValue("0");
+		optionMap.put("threshold", thresholdOption);
 	}
 
 	@Override

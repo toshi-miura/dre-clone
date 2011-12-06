@@ -98,6 +98,7 @@
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="src" includes="lang/**"/>
 			<fileset dir="." includes="res/icon/**"/>
+			<fileset file="res/null32.png"/>
 		</jar>
 	</target>
 	<target name="make-win32-amd64-distribution" depends="make-common-distribution">
@@ -112,6 +113,7 @@
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="src" includes="lang/**"/>
 			<fileset dir="." includes="res/icon/**"/>
+			<fileset file="res/null32.png"/>
 		</jar>
 	</target>
 	<target name="make-macosx-x86-distribution" depends="make-common-distribution">
@@ -126,6 +128,7 @@
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="src" includes="lang/**"/>
 			<fileset dir="." includes="res/icon/**"/>
+			<fileset file="res/null32.png"/>
 		</jar>
 	</target>
 	<target name="make-macosx-amd64-distribution" depends="make-common-distribution">
@@ -140,6 +143,7 @@
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="src" includes="lang/**"/>
 			<fileset dir="." includes="res/icon/**"/>
+			<fileset file="res/null32.png"/>
 		</jar>
 	</target>
 	<target name="make-linux-x86-distribution" depends="make-common-distribution">
@@ -154,6 +158,7 @@
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="src" includes="lang/**"/>
 			<fileset dir="." includes="res/icon/**"/>
+			<fileset file="res/null32.png"/>
 		</jar>
 	</target>
 	<target name="make-linux-amd64-distribution" depends="make-common-distribution">
@@ -168,6 +173,7 @@
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="src" includes="lang/**"/>
 			<fileset dir="." includes="res/icon/**"/>
+			<fileset file="res/null32.png"/>
 		</jar>
 	</target>
 	<target name="make-all-distribution">
