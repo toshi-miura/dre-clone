@@ -25,9 +25,8 @@
 	<target name="build-core">
 		<mkdir dir="bin"/>
 		<javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
-			<sourcepath>
-				<fileset dir="src" includes="jp/thisnor/dre/core/**"/>
-			</sourcepath>
+			<src path="src"/>
+			<include name="jp/thisnor/dre/core/**"/>
 			<classpath refid="DeadRingerEraser2011.classpath"/>
 		</javac>
 	</target>
@@ -37,9 +36,8 @@
 			<fileset dir="src/lang"/>
 		</copy>
 		<javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
-			<sourcepath>
-				<fileset dir="src" includes="jp/thisnor/dre/app/**"/>
-			</sourcepath>
+			<src path="src"/>
+			<include name="jp/thisnor/dre/app/**"/>
 			<classpath refid="DeadRingerEraser2011.classpath"/>
 		</javac>
 	</target>
