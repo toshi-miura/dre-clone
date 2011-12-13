@@ -151,8 +151,9 @@ class ConsoleApp {
 		List<SimilarGroup> simGroupList = null;
 		try {
 			simGroupList = task.call();
-		} catch (InterruptedException e) {
-			System.err.println("Aborted");
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			System.err.println("Aborted.");
 			return false;
 		}
 

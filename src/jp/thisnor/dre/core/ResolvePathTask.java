@@ -67,7 +67,7 @@ public class ResolvePathTask implements Runnable {
 		for (File f : dir.listFiles()) {
 			if (!f.isDirectory()) {
 				checkAndAddPath(f.getPath());
-			} else {
+			} else if (recursive) {
 				traverseDir(f, recursive);
 			}
 		}

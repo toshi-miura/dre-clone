@@ -29,7 +29,7 @@ public class FileEntrySelectPage extends DREPage {
 		;
 
 	private static final String
-		DEFAULT_EXTENSION_FILTER = ".*\\.(?i:png|jpe?g|gif)";
+		DEFAULT_EXTENSION_FILTER = ".*\\.(?i:png|jpe?g|gif|bmp)";
 
 	private DREFrame frame;
 	private PreferenceStore prefs;

@@ -93,7 +93,7 @@ class DisposeWaySelectPage extends DREPage {
 	@Override
 	void nextRequested() {
 		if (getSelectedDisposeWay() == 0) {
-			MessageBox msgBox = new MessageBox(Display.getCurrent().getActiveShell(), SWT.YES | SWT.NO);
+			MessageBox msgBox = new MessageBox(Display.getDefault().getActiveShell(), SWT.YES | SWT.NO);
 			msgBox.setText(messages.getString("DisposeWaySelectPage.CONFIRM_DELETE_TITLE"));
 			msgBox.setMessage(messages.getString("DisposeWaySelectPage.CONFIRM_DELETE_MESSAGE"));
 			if (msgBox.open() == SWT.NO) return;

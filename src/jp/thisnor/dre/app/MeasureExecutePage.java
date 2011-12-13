@@ -144,13 +144,23 @@ class MeasureExecutePage extends DREPage {
 				try {
 					task.call();
 					logger.log("Finished.");
-				} catch (InterruptedException e) {
+					Display.getDefault().asyncExec(new Runnable() {
+						public void run() {
+							loadProgress.setSelection(1);
+							loadProgress.setMaximum(1);
+							measureProgress.setSelection(1);
+							measureProgress.setMaximum(1);
+						}
+					});
+				} catch (Exception e) {
+					logger.log(e.getLocalizedMessage());
 					logger.log("Aborted.");
 				}
 				simGroupList = task.getResult();
 				Display.getDefault().asyncExec(new Runnable() {
 					public void run() {
-						frame.setNextButtonEnabled(true);
+						if (!frame.getShell().isDisposed())
+							frame.setNextButtonEnabled(true);
 					}
 				});
 			}
@@ -174,7 +184,7 @@ class MeasureExecutePage extends DREPage {
 	@Override
 	void previousRequested() {
 		if (executor != null && !executor.isTerminated()) {
-			MessageBox msgBox = new MessageBox(Display.getCurrent().getActiveShell(), SWT.YES | SWT.NO);
+			MessageBox msgBox = new MessageBox(Display.getDefault().getActiveShell(), SWT.YES | SWT.NO);
 			msgBox.setText(messages.getString("MeasureExecutePage.CONFIRM_ABORT_TITLE"));
 			msgBox.setMessage(messages.getString("MeasureExecutePage.CONFIRM_ABORT_MESSAGE"));
 			if (msgBox.open() == SWT.NO) return;

@@ -3,10 +3,9 @@ package jp.thisnor.dre.app;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.imageio.ImageIO;
 
@@ -66,7 +65,9 @@ class FileDropListViewer {
 		APPEND_FOLDER_ICON_PATH = "res/icon/folder_add_inactive32.png"; //$NON-NLS-1$
 
 	private static final String
-		TABLE_EDITOR_KEY = "tableEditor"; //$NON-NLS-1$
+		TABLE_EDITOR_KEY = "tableEditor",
+		TABLE_PROPS_KEY = "props",
+		TABLE_FUTURE_KEY = "future"; //$NON-NLS-1$
 
 	private Messages messages;
 
@@ -78,7 +79,6 @@ class FileDropListViewer {
 	private Image appendFileIconImage, appendFolderIconImage;
 
 	private ExecutorService computePropertiesExecutor;
-	private Map<FileEntry, String> propertiesMap;
 
 	private List<String> pathList;
 	private boolean listChanged;
@@ -86,7 +86,6 @@ class FileDropListViewer {
 	FileDropListViewer(DREFrame frame, Composite parentComp) {
 		messages = frame.getMessages();
 		computePropertiesExecutor = Executors.newSingleThreadExecutor();
-		propertiesMap = new WeakHashMap<FileEntry, String>();
 		listChanged = true;
 
 		fileIconImage = ImageUtils.loadImage(FILE_ICON_PATH);
@@ -155,6 +154,10 @@ class FileDropListViewer {
 
 	void setEnabled(boolean enabled) {
 		fileTable.setEnabled(enabled);
+		for (TableItem item : fileTable.getItems()) {
+			TableEditor editor = (TableEditor)item.getData(TABLE_EDITOR_KEY);
+			if (editor != null) editor.getEditor().setEnabled(enabled);
+		}
 	}
 
 	void addFile(String path) {
@@ -199,19 +202,37 @@ class FileDropListViewer {
 		return l;
 	}
 
-	private void addFilesRaw(String[] paths, int insertPos) {
-		for (String p : paths) {
+	private String toRawPath(String exPath) {
+		return exPath.endsWith("//") ? exPath.substring(0, exPath.length() - 2) : exPath;
+	}
+
+	private void addFilesRaw(String[] exPaths, int insertPos) {
+		for (String exPath : exPaths) {
+			boolean preSub = false;
+			String preProps = null;
 			for (int i = 0; i < fileTable.getItemCount() - 2; i++) {
-				FileEntry fe = (FileEntry)fileTable.getItem(i).getData();
-				if (fe != null && fe.getPath().equals(p)) {
+				TableItem item = fileTable.getItem(i);
+				FileEntry fe = (FileEntry)item.getData();
+				if (fe != null && fe.getPath().equals(toRawPath(exPath))) {
+					preSub = item.getData(TABLE_EDITOR_KEY) != null ?
+							((Button)((TableEditor)item.getData(TABLE_EDITOR_KEY)).getEditor()).getSelection() : false;
+					preProps = (String)item.getData(TABLE_PROPS_KEY);
 					removeItemsRaw(new int[] {i});
 					if (insertPos > i) insertPos--;
-					i--;
+					break;
 				}
 			}
-		}
-		for (String p : paths) {
-			newTableItem(p, insertPos++);
+			TableItem item = newTableItem(exPath, insertPos++);
+			if (preSub) {
+				((Button)((TableEditor)item.getData(TABLE_EDITOR_KEY)).getEditor()).setSelection(preSub);
+			}
+			if (preProps != null) {
+				item.setData(TABLE_PROPS_KEY, preProps);
+			} else {
+				item.setData(
+						TABLE_FUTURE_KEY,
+						computePropertiesExecutor.submit(new ComputeFilePropertiesTask(item)));
+			}
 		}
 		listChanged = true;
 	}
@@ -249,6 +270,7 @@ class FileDropListViewer {
 		subButton.setSelection(false);
 		subButton.pack();
 		subButton.addSelectionListener(FILE_TABLE_CHECKBOX_LISTENER);
+		subButton.setData(item);
 		editor.minimumWidth = subButton.getSize().x;
 		editor.horizontalAlignment = SWT.CENTER;
 		editor.setEditor(subButton, item, 1);
@@ -307,11 +329,11 @@ class FileDropListViewer {
 		public void widgetSelected(SelectionEvent event) {
 			TableItem item = (TableItem)event.item;
 			if (item == appendDirItem) {
-				DirectoryDialog dialog = new DirectoryDialog(Display.getCurrent().getActiveShell(), SWT.MULTI);
+				DirectoryDialog dialog = new DirectoryDialog(Display.getDefault().getActiveShell(), SWT.MULTI);
 				String path = dialog.open();
 				if (path != null) addFile(path);
 			} else if (item == appendFileItem) {
-				FileDialog dialog = new FileDialog(Display.getCurrent().getActiveShell(), SWT.MULTI);
+				FileDialog dialog = new FileDialog(Display.getDefault().getActiveShell(), SWT.MULTI);
 				dialog.open();
 				if (dialog.getFileNames() != null)
 					addFiles(dialog.getFileNames());
@@ -361,20 +383,17 @@ class FileDropListViewer {
 			if (item.getImage() == null) return;
 			if (item == appendDirItem || item == appendFileItem) {
 				GC gc = event.gc;
-				gc.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_TITLE_INACTIVE_FOREGROUND));
+				gc.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_TITLE_INACTIVE_FOREGROUND));
 				gc.drawImage(item.getImage(), event.x + 4, event.y + 4);
 				gc.drawText(item.getText(), event.x + 48, event.y + 20, true);
 				return;
 			}
 			FileEntry fileEntry = (FileEntry)item.getData();
-			String text = propertiesMap.get(fileEntry);
-			if (text == null) {
-				computePropertiesExecutor.execute(new ComputeFilePropertiesTask(fileEntry));
-			}
+			String props = (String)item.getData(TABLE_PROPS_KEY);
 			GC gc = event.gc;
 			gc.drawImage(item.getImage(), event.x + 4, event.y + 4);
 			gc.drawText(fileEntry.getPath(), event.x + 48, event.y, true);
-			gc.drawText(text != null ? text : messages.getString("FileDropListViewer.REPORT_CALCULATING_MESSAGE"), event.x + 48, event.y + 20, true);
+			gc.drawText(props != null ? props : messages.getString("FileDropListViewer.REPORT_CALCULATING_MESSAGE"), event.x + 48, event.y + 20, true);
 		}
 	};
 
@@ -461,38 +480,66 @@ class FileDropListViewer {
 	private final SelectionListener FILE_TABLE_CHECKBOX_LISTENER = new SelectionAdapter() {
 		@Override
 		public void widgetSelected(SelectionEvent event) {
+			TableItem item = (TableItem)event.widget.getData();
+			Future<?> future = (Future<?>)item.getData(TABLE_FUTURE_KEY);
+			if (future != null) future.cancel(true);
+			item.setData(
+					TABLE_FUTURE_KEY,
+					computePropertiesExecutor.submit(new ComputeFilePropertiesTask(item)));
 			listChanged = true;
 		}
 	};
 
 	private class ComputeFilePropertiesTask implements Runnable {
+		private final TableItem item;
 		private final FileEntry fileEntry;
+		private final boolean recursive;
 
-		private ComputeFilePropertiesTask(FileEntry fileEntry) {
-			this.fileEntry = fileEntry;
+		private ComputeFilePropertiesTask(TableItem item) {
+			this.item = item;
+			this.fileEntry = (FileEntry)item.getData();
+			this.recursive = item.getData(TABLE_EDITOR_KEY) != null ?
+					((Button)((TableEditor)item.getData(TABLE_EDITOR_KEY)).getEditor()).getSelection() : false;
 		}
 
 		public void run() {
-			if (fileEntry.isDirectory()) {
-				computeDirProperties();
-			} else if (isImageFile(fileEntry.getPath())) {
-				computeImageFileProperties();
-			} else {
-				computeFileProperties();
+			Display.getDefault().syncExec(new Runnable() {
+				public void run() {
+					if (!item.isDisposed()) item.setData(TABLE_PROPS_KEY, null);
+				}
+			});
+			Display.getDefault().syncExec(FILE_TABLE_REDRAW_TASK);
+			String text = null;
+			try {
+				if (fileEntry.isDirectory()) {
+					text = computeDirProperties();
+				} else if (isImageFile(fileEntry.getPath())) {
+					text = computeImageFileProperties();
+				} else {
+					text = computeFileProperties();
+				}
+			} catch (Exception e) {
+				text = messages.getString("FileDropListViewer.FAILED_CALCULATING_MESSAGE");
 			}
+			final String text2 = text;
+			if (Thread.interrupted()) return;
+			Display.getDefault().syncExec(new Runnable() {
+				public void run() {
+					if (!item.isDisposed()) item.setData(TABLE_PROPS_KEY, text2);
+				}
+			});
 			Display.getDefault().syncExec(FILE_TABLE_REDRAW_TASK);
 		}
 
-		private void computeFileProperties() {
+		private String computeFileProperties() {
 			File file = new File(fileEntry.getPath());
-			if (!file.exists()) return;
-			String text = getFileSizeDescription(file.length());
-			propertiesMap.put(fileEntry, text);
+			if (!file.exists()) return "";
+			return getFileSizeDescription(file.length());
 		}
 
-		private void computeImageFileProperties() {
+		private String computeImageFileProperties() {
 			File file = new File(fileEntry.getPath());
-			if (!file.exists()) return;
+			if (!file.exists()) return "";
 			Image image = ImageUtils.loadImage(fileEntry);
 			StringBuilder sb = new StringBuilder();
 			if (image != null) {
@@ -501,19 +548,43 @@ class FileDropListViewer {
 				sb.append(data.depth).append("bpp").append(' '); //$NON-NLS-1$
 			}
 			sb.append(getFileSizeDescription(file.length()));
-			propertiesMap.put(fileEntry, sb.toString());
+			return sb.toString();
 		}
 
-		private void computeDirProperties() {
+		private String computeDirProperties() {
 			File dir = new File(fileEntry.getPath());
-			if (!dir.exists()) return;
-			int numDirs = 0, numFiles = 0;
+			if (!dir.exists()) return "";
+			DirProps dirProps = new DirProps();
 			for (File child : dir.listFiles()) {
-				if (child.isDirectory()) ++numDirs; else ++numFiles;
+				if (child.isDirectory()) {
+					dirProps.numDirs++;
+					if (recursive) computeDirProperties(child, dirProps);
+				} else {
+					dirProps.numFiles++;
+					dirProps.length += child.length();
+				}
 			}
-			String text = String.format(messages.getString("FileDropListViewer.REPORT_DIRINFO_MESSAGE"), numDirs, numFiles);
-			propertiesMap.put(fileEntry, text);
+			String text = String.format(
+					messages.getString("FileDropListViewer.REPORT_DIRINFO_MESSAGE"),
+					dirProps.numDirs, dirProps.numFiles, getFileSizeDescription(dirProps.length));
+			return text;
 		}
+
+		private void computeDirProperties(File dir, DirProps dirProps) {
+			for (File child : dir.listFiles()) {
+				if (child.isDirectory()) {
+					computeDirProperties(child, dirProps);
+				} else {
+					dirProps.numFiles++;
+					dirProps.length += child.length();
+				}
+			}
+		}
+	}
+
+	private static class DirProps {
+		int numDirs, numFiles;
+		long length;
 	}
 
 	private final Runnable FILE_TABLE_REDRAW_TASK = new Runnable() {

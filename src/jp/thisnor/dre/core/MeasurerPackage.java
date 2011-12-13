@@ -46,7 +46,7 @@ public class MeasurerPackage {
 		author = desc.author;
 		caption = desc.caption;
 		description = desc.description;
-		image = (desc.image != null) ? new Image(Display.getCurrent(), clsLoader.getResourceAsStream(desc.image)) : null;
+		image = (desc.image != null) ? new Image(Display.getDefault(), clsLoader.getResourceAsStream(desc.image)) : null;
 		handler = clsLoader.loadClass(desc.handlerClsPath).asSubclass(Measurer.class).newInstance();
 		optionMap = desc.optionMap;
 	}

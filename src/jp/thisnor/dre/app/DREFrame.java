@@ -124,7 +124,7 @@ class DREFrame {
 		putPage(DisposeWaySelectPage.class, new DisposeWaySelectPage(this));
 		putPage(DisposeExecutePage.class, new DisposeExecutePage(this));
 
-		Display display = new Display();
+		Display display = Display.getDefault();
 		shell = new Shell(display);
 		shell.setText(Application.APP_NAME + " " + Application.VERSION);
 		shell.setSize(prefs.getInt(PREFS_SHELL_WIDTH_KEY), prefs.getInt(PREFS_SHELL_HEIGHT_KEY));
@@ -161,20 +161,20 @@ class DREFrame {
 
 	private void createContents(Composite parent) {
 		titleBar = new Composite(parent, SWT.NONE);
-		titleBar.setBackground(new Color(Display.getCurrent(), 255, 255, 255));
+		titleBar.setBackground(new Color(Display.getDefault(), 255, 255, 255));
 		{
 			RowLayout l = new RowLayout(SWT.VERTICAL);
 			l.marginWidth = l.marginHeight = 8;
 			titleBar.setLayout(l);
 		}
 		pageTitleLabel = new Label(titleBar, SWT.NONE);
-		pageTitleLabel.setBackground(new Color(Display.getCurrent(), 255, 255, 255));
-		pageTitleLabel.setFont(new Font(Display.getCurrent(),
-				Display.getCurrent().getSystemFont().getFontData()[0].getName(),
-				Display.getCurrent().getSystemFont().getFontData()[0].getHeight(),
+		pageTitleLabel.setBackground(new Color(Display.getDefault(), 255, 255, 255));
+		pageTitleLabel.setFont(new Font(Display.getDefault(),
+				Display.getDefault().getSystemFont().getFontData()[0].getName(),
+				Display.getDefault().getSystemFont().getFontData()[0].getHeight(),
 				SWT.BOLD));
 		pageDescLabel = new Label(titleBar, SWT.NONE);
-		pageDescLabel.setBackground(new Color(Display.getCurrent(), 255, 255, 255));
+		pageDescLabel.setBackground(new Color(Display.getDefault(), 255, 255, 255));
 
 		Group contentGroup = new Group(parent, SWT.NONE);
 		{

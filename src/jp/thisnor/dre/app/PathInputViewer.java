@@ -77,7 +77,7 @@ class PathInputViewer {
 					currentPath = currentPath.substring(0, posSep);
 				}
 			}
-			DirectoryDialog dialog = new DirectoryDialog(Display.getCurrent().getActiveShell());
+			DirectoryDialog dialog = new DirectoryDialog(Display.getDefault().getActiveShell());
 			if (currentPath != null) dialog.setFilterPath(currentPath);
 			String fpath = dialog.open();
 			if (fpath != null) {

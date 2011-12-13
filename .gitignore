@@ -7,9 +7,10 @@ distribution/
 hp/
 jardesc/
 launch4j/
+manual/
 profile/
 res/
-testdata/
+testdata*/
 prefs
 stderr
 stdout

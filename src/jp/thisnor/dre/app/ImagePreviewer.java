@@ -1,5 +1,9 @@
 package jp.thisnor.dre.app;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
+
 import jp.thisnor.dre.core.FileEntry;
 
 import org.eclipse.jface.preference.PreferenceStore;
@@ -58,6 +62,17 @@ public class ImagePreviewer {
 	private int loupeWidth, loupeHeight;
 	private double loupeZoom;
 	private boolean mouseDown;
+
+	private static final int MAX_NUM_CACHED_IMAGES = 16;
+	private static class ImageCache {
+		private final FileEntry fileEntry;
+		private final Image image;
+		private ImageCache(FileEntry fileEntry, Image image) {
+			this.fileEntry = fileEntry;
+			this.image = image;
+		}
+	}
+	private Queue<ImageCache> cachedImageQueue = new LinkedList<ImageCache>();
 
 	ImagePreviewer(DREFrame frame) {
 		this.frame = frame;
@@ -157,16 +172,16 @@ public class ImagePreviewer {
 	}
 
 	void setFileEntry(final FileEntry entry) {
-		if (image != null) image.dispose();
+		image = null;
 		if (entry == null) {
 			titleLabel.setText(""); //$NON-NLS-1$
 			infoLabel.setText(""); //$NON-NLS-1$
 			canvas.redraw();
 			descComp.layout();
 		} else {
-			Display.getCurrent().asyncExec(new Runnable() {
+			Display.getDefault().syncExec(new Runnable() {
 				public void run() {
-					image = ImageUtils.loadImage(entry);
+					image = getImage(entry);
 					titleLabel.setText(entry.getName());
 					StringBuilder infoText = new StringBuilder();
 					if (image != null) {
@@ -183,6 +198,33 @@ public class ImagePreviewer {
 				}
 			});
 		}
+	}
+
+	void preloadImage(FileEntry fileEntry) {
+		getImage(fileEntry);
+	}
+
+	private Image getImage(FileEntry fileEntry) {
+		ImageCache cache = null;
+		for (Iterator<ImageCache> it = cachedImageQueue.iterator(); it.hasNext(); ) {
+			ImageCache curCache = it.next();
+			if (fileEntry.equals(curCache.fileEntry)) {
+				it.remove();
+				cache = curCache;
+				break;
+			}
+		}
+		if (cache == null) {
+			if (cachedImageQueue.size() >= MAX_NUM_CACHED_IMAGES) {
+				ImageCache disposing = cachedImageQueue.poll();
+				if (disposing.image == image) return null;
+				disposing.image.dispose();
+			}
+			Image image = ImageUtils.loadImage(fileEntry);
+			cache = new ImageCache(fileEntry, image);
+		}
+		cachedImageQueue.offer(cache);
+		return cache.image;
 	}
 
 	void setLoupeEnabled(boolean enabled) {
@@ -243,7 +285,7 @@ public class ImagePreviewer {
 				if (viewImage != null) viewImage.dispose();
 				clientWidth = clientRect.width;
 				clientHeight = clientRect.height;
-				viewImage = new Image(Display.getCurrent(), clientWidth, clientHeight);
+				viewImage = new Image(Display.getDefault(), clientWidth, clientHeight);
 			}
 
 			GC gc2 = new GC(viewImage);
@@ -279,7 +321,7 @@ public class ImagePreviewer {
 					int heightOnView = (int)(heightOnSrc * loupeZoom);
 					int leftOnView = (int)((leftOnSrc - loupeXOnSrc) * loupeZoom) + loupeX;
 					int topOnView = (int)((topOnSrc - loupeYOnSrc) * loupeZoom) + loupeY;
-					Path clippingPath = new Path(Display.getCurrent());
+					Path clippingPath = new Path(Display.getDefault());
 					clippingPath.addArc(loupeX - loupeWidth / 2, loupeY - loupeHeight / 2, loupeWidth, loupeHeight, 0, 360);
 					gc2.setClipping(clippingPath);
 					gc2.fillRectangle(leftOnView, topOnView, widthOnView, heightOnView);

@@ -33,7 +33,7 @@ public class ImageUtils {
 			}
 		} else {
 			try {
-				return new Image(Display.getCurrent(), path);
+				return new Image(Display.getDefault(), path);
 			} catch (SWTException e) {
 				return null;
 			}
@@ -44,7 +44,7 @@ public class ImageUtils {
 		InputStream in = null;
 		try {
 			in = entry.open();
-			return new Image(Display.getCurrent(), in);
+			return new Image(Display.getDefault(), in);
 		} catch (IOException e) {
 			return null;
 		} catch (SWTException e) {

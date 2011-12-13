@@ -33,9 +33,6 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 			List<String> targetList, List<String> storageList, PathFilter filter,
 			Measurer measurer, Map<String, MeasureOptionEntry> optionMap, int numThreads,
 			ProgressListener logger) {
-		if (measurer == null) throw new IllegalArgumentException("Need measurer");
-		if (targetList == null) throw new IllegalArgumentException("Need target path list");
-		if (numThreads <= 0) throw new IllegalArgumentException("numThreads must be >= 1, got " + numThreads);
 		this.targetList = targetList;
 		this.storageList = storageList;
 		this.filter = filter;
@@ -45,9 +42,16 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 		this.logger = logger;
 	}
 
-	public List<SimilarGroup> call() throws InterruptedException {
+	public List<SimilarGroup> call() throws DREException, InterruptedException {
+		if (measurer == null) throw new DREException("No measurer specified.");
+		if (targetList == null) throw new DREException("target set is empty.");
+		if (numThreads <= 0) throw new IllegalArgumentException("numThreads must be >= 1, got " + numThreads);
+
 		ExecutorService executor;
 		SynchronizedCounter counter;
+		long t0, t1;
+
+		t0 = System.nanoTime();
 
 		// Generate MeasureEntry
 		List<MeasureEntry> targetEntryList = new ArrayList<MeasureEntry>();
@@ -76,6 +80,13 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 		} catch (InterruptedException e) {
 			executor.shutdownNow();
 			throw e;
+		}
+
+		if (targetEntryList.isEmpty()) {
+			throw new DREException("Target set is empty.");
+		}
+		if (storageEntryList.isEmpty()) {
+			throw new DREException("Search-in set is empty.");
 		}
 
 		// Init
@@ -126,6 +137,10 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 				if (it.next().data == null) it.remove();
 			}
 		}
+
+		t1 = System.nanoTime();
+		logger.log(String.format("Finished loading. (%.2fsec)", (double)((t1 - t0) / 1000000) / 1000.0));
+		t0 = System.nanoTime();
 
 		// First-measure
 		executor = Executors.newFixedThreadPool(numThreads);
@@ -185,6 +200,9 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 				entry.data = null;
 			}
 		}
+
+		t1 = System.nanoTime();
+		logger.log(String.format("Finished comparing. (%.2fsec)", (double)((t1 - t0) / 1000000) / 1000.0));
 
 		return simGroupList;
 	}

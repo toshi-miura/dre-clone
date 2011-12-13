@@ -94,7 +94,7 @@ class DisposeExecutePage extends DREPage {
 			break;
 		case 1:
 			if (!dirMoveTo.exists()) {
-				MessageBox msgBox = new MessageBox(Display.getCurrent().getActiveShell(), SWT.YES | SWT.NO);
+				MessageBox msgBox = new MessageBox(Display.getDefault().getActiveShell(), SWT.YES | SWT.NO);
 				msgBox.setText(messages.getString("DisposeExecutePage.CONFIRM_MKDIR_TITLE"));
 				msgBox.setMessage(messages.getString("DisposeExecutePage.CONFIRM_MKDIR_MESSAGE"));
 				if (msgBox.open() == SWT.NO) {
@@ -117,6 +117,10 @@ class DisposeExecutePage extends DREPage {
 
 	@Override
 	void hiddened() {
+		if (executor != null && !executor.isTerminated()) {
+			executor.shutdownNow();
+		}
+		executor = null;
 	}
 
 	@Override
@@ -126,7 +130,7 @@ class DisposeExecutePage extends DREPage {
 	@Override
 	void previousRequested() {
 		if (!executor.isTerminated()) {
-			MessageBox msgBox = new MessageBox(Display.getCurrent().getActiveShell(), SWT.YES | SWT.NO);
+			MessageBox msgBox = new MessageBox(Display.getDefault().getActiveShell(), SWT.YES | SWT.NO);
 			msgBox.setText(messages.getString("DisposeExecutePage.CONFIRM_ABORT_TITLE"));
 			msgBox.setMessage(messages.getString("DisposeExecutePage.CONFIRM_ABORT_MESSAGE"));
 			if (msgBox.open() == SWT.NO) return;

@@ -32,9 +32,9 @@ class PackageListViewer {
 	}
 
 	void createContents(Composite parent) {
-		systemFont = Display.getCurrent().getSystemFont();
+		systemFont = Display.getDefault().getSystemFont();
 		FontData systemFontData = systemFont.getFontData()[0];
-		boldFont = new Font(Display.getCurrent(), systemFontData.getName(), systemFontData.getHeight(), SWT.BOLD);
+		boldFont = new Font(Display.getDefault(), systemFontData.getName(), systemFontData.getHeight(), SWT.BOLD);
 		defaultPackageIcon = ImageUtils.loadImage(DEFAULT_PACKAGE_ICON_PATH);
 
 		packageList = new Table(parent, SWT.BORDER | SWT.V_SCROLL | SWT.VIRTUAL);

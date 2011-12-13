@@ -14,16 +14,8 @@ import jp.thisnor.dre.core.NormalFileEntry;
 import jp.thisnor.dre.core.SimilarEntry;
 import jp.thisnor.dre.core.SimilarGroup;
 
-import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnWeightData;
-import org.eclipse.jface.viewers.IContentProvider;
-import org.eclipse.jface.viewers.ILabelProviderListener;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableLayout;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.KeyAdapter;
@@ -32,7 +24,6 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -55,7 +46,7 @@ class SimilarEntrySelectPage extends DREPage {
 	private Table fileEntryTable;
 	private Composite similarEntryComp;
 	private Label similarEntryLabel;
-	private TableViewer similarEntryTableViewer;
+	private Table similarEntryTable;
 	private ImagePreviewer previewer;
 	private SimilarEntryCheckerViewer checkerViewer;
 
@@ -90,8 +81,7 @@ class SimilarEntrySelectPage extends DREPage {
 
 		fileEntryTable = new Table(fileEntryComp, SWT.CHECK | SWT.BORDER | SWT.V_SCROLL);
 		fileEntryTable.addSelectionListener(FILE_TABLE_SELECTION_LISTENER);
-		fileEntryTable.addSelectionListener(FILE_TABLE_CHECK_LISTENER);
-		fileEntryTable.addKeyListener(FILE_TABLE_SHIFT_LISTENER);
+		fileEntryTable.addKeyListener(FILE_TABLE_KEY_LISTENER);
 		fileEntryTable.addKeyListener(COMMON_TABLE_KEY_LISTENER);
 		{
 			TableLayout l = new TableLayout();
@@ -121,7 +111,7 @@ class SimilarEntrySelectPage extends DREPage {
 		similarEntryControlLabel.setText(messages.getString("SimilarEntrySelectPage.SIMILAR_TABLE_CONTROL_CAPTION"));
 		similarEntryControlLabel.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_TITLE_INACTIVE_FOREGROUND));
 
-		Table similarEntryTable = new Table(similarEntryComp, SWT.CHECK | SWT.BORDER | SWT.V_SCROLL);
+		similarEntryTable = new Table(similarEntryComp, SWT.CHECK | SWT.BORDER | SWT.V_SCROLL);
 		{
 			TableColumn entryColumn = new TableColumn(similarEntryTable, SWT.NONE);
 			entryColumn.setText(messages.getString("SimilarEntrySelectPage.SIMILAR_TABLE.COLUMN.FILE"));
@@ -129,12 +119,8 @@ class SimilarEntrySelectPage extends DREPage {
 			distColumn.setText(messages.getString("SimilarEntrySelectPage.SIMILAR_TABLE.COLUMN.DISTANCE"));
 		}
 		similarEntryTable.setHeaderVisible(true);
-		similarEntryTableViewer = new TableViewer(similarEntryTable);
-		similarEntryTableViewer.setContentProvider(SIMILAR_TABLE_CONTENT_PROVIDER);
-		similarEntryTableViewer.setLabelProvider(SIMILAR_TABLE_LABEL_PROVIDER);
-		similarEntryTableViewer.addSelectionChangedListener(SIMILAR_TABLE_SELECTED);
-		similarEntryTable.addSelectionListener(SIMILAR_TABLE_CHECK_LISTENER);
-		similarEntryTable.addKeyListener(SIMILAR_TABLE_SHIFT_LISTENER);
+		similarEntryTable.addSelectionListener(SIMILAR_TABLE_SELECTION_LISTENER);
+		similarEntryTable.addKeyListener(SIMILAR_TABLE_KEY_LISTENER);
 		similarEntryTable.addKeyListener(COMMON_TABLE_KEY_LISTENER);
 		{
 			TableLayout l = new TableLayout();
@@ -222,21 +208,32 @@ class SimilarEntrySelectPage extends DREPage {
 	}
 
 	void updateSimilarTableCheckState() {
-		for (TableItem item : similarEntryTableViewer.getTable().getItems()) {
-			SimilarEntry similar = (SimilarEntry)item.getData();
-			item.setChecked(checkedFileSet.contains(similar.getFileEntry()));
+		for (TableItem item : similarEntryTable.getItems()) {
+			FileEntry fileEntry = (FileEntry)item.getData();
+			item.setChecked(checkedFileSet.contains(fileEntry));
 		}
 	}
 
 	private void setActiveFileEntryItem(TableItem item) {
 		SimilarGroup simGroup = (SimilarGroup)item.getData();
-		similarEntryTableViewer.setInput(simGroup);
-		similarEntryTableViewer.getTable().setSelection(0);
-		for (TableItem simItem : similarEntryTableViewer.getTable().getItems()) {
-			SimilarEntry similar = (SimilarEntry)simItem.getData();
-			if (checkedFileSet.contains(similar.getFileEntry())) simItem.setChecked(true);
+		similarEntryTable.removeAll();
+		{
+			TableItem simItem = new TableItem(similarEntryTable, SWT.NONE);
+			simItem.setText(0, simGroup.getFileEntry().getName());
+			simItem.setText(1, "0");
+			simItem.setData(simGroup.getFileEntry());
 		}
+		for (SimilarEntry e : simGroup.getSimilarList()) {
+			TableItem simItem = new TableItem(similarEntryTable, SWT.NONE);
+			simItem.setText(0, e.getFileEntry().getName());
+			simItem.setText(1, Integer.toString(e.getDistance()));
+			simItem.setData(e.getFileEntry());
+		}
+		updateSimilarTableCheckState();
 		previewer.setFileEntry(simGroup.getFileEntry());
+//		for (SimilarEntry e : simGroup.getSimilarList()) {
+//			previewer.preloadImage(e.getFileEntry());
+//		}
 		similarEntryLabel.setText(messages.getString("SimilarEntrySelectPage.SIMILAR_TABLE_CAPTION") + " (" + (simGroup.getSimilarList().size() + 1) + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 		similarEntryComp.layout();
 	}
@@ -270,7 +267,7 @@ class SimilarEntrySelectPage extends DREPage {
 		}
 
 		fileEntryTable.removeAll();
-		similarEntryTableViewer.getTable().removeAll();
+		similarEntryTable.removeAll();
 		previewer.setFileEntry(null);
 		checkedFileSet.clear();
 
@@ -299,7 +296,7 @@ class SimilarEntrySelectPage extends DREPage {
 
 	@Override
 	void previousRequested() {
-		MessageBox msgBox = new MessageBox(Display.getCurrent().getActiveShell(), SWT.YES | SWT.NO);
+		MessageBox msgBox = new MessageBox(Display.getDefault().getActiveShell(), SWT.YES | SWT.NO);
 		msgBox.setText(messages.getString("SimilarEntrySelectPage.CONFIRM_BACK_TITLE"));
 		msgBox.setMessage(messages.getString("SimilarEntrySelectPage.CONFIRM_BACK_MESSAGE"));
 		if (msgBox.open() == SWT.NO) return;
@@ -331,6 +328,7 @@ class SimilarEntrySelectPage extends DREPage {
 						if (ffirst) {
 							setActiveFileEntryItem(item);
 							fileEntryTable.setSelection(0);
+							similarEntryTable.setSelection(0);
 						}
 					}
 				});
@@ -349,99 +347,66 @@ class SimilarEntrySelectPage extends DREPage {
 	private final SelectionListener FILE_TABLE_SELECTION_LISTENER = new SelectionAdapter() {
 		@Override
 		public void widgetSelected(SelectionEvent event) {
-			TableItem item = (TableItem)event.item;
-			setActiveFileEntryItem(item);
+			if (event.detail == SWT.CHECK) {
+				TableItem item = (TableItem)event.item;
+				FileEntry fileEntry = ((SimilarGroup)item.getData()).getFileEntry();
+				setFileChecked(fileEntry, item.getChecked());
+			} else {
+				setActiveFileEntryItem((TableItem)event.item);
+				similarEntryTable.setSelection(0);
+			}
 		}
 	};
 
-	private final KeyListener FILE_TABLE_SHIFT_LISTENER = new KeyAdapter() {
+	private final KeyListener FILE_TABLE_KEY_LISTENER = new KeyAdapter() {
 		@Override
 		public void keyPressed(KeyEvent event) {
 			if (event.keyCode == SWT.SHIFT) {
-				similarEntryTableViewer.getTable().forceFocus();
+				similarEntryTable.forceFocus();
 			}
 		}
 	};
 
-	private final IContentProvider SIMILAR_TABLE_CONTENT_PROVIDER = new ArrayContentProvider() {
+	private final SelectionListener SIMILAR_TABLE_SELECTION_LISTENER = new SelectionAdapter() {
 		@Override
-		public Object[] getElements(Object inputElement) {
-			SimilarGroup simGroup = (SimilarGroup)inputElement;
-			Object[] array = new Object[simGroup.getSimilarList().size() + 1];
-			array[0] = new SimilarEntry(simGroup.getFileEntry(), 0);
-			for (int i = 1; i < array.length; i++) {
-				array[i] = simGroup.getSimilarList().get(i - 1);
-			}
-			return array;
-		}
-	};
-
-	private final ITableLabelProvider SIMILAR_TABLE_LABEL_PROVIDER = new ITableLabelProvider() {
-		@Override
-		public void addListener(ILabelProviderListener arg0) {
-		}
-
-		@Override
-		public void dispose() {
-		}
-
-		@Override
-		public boolean isLabelProperty(Object arg0, String arg1) {
-			return false;
-		}
-
-		@Override
-		public void removeListener(ILabelProviderListener arg0) {
-		}
-
-		@Override
-		public Image getColumnImage(Object arg0, int arg1) {
-			return null;
-		}
-
-		@Override
-		public String getColumnText(Object element, int index) {
-			SimilarEntry similar = (SimilarEntry)element;
-			return (index == 0) ? similar.getFileEntry().getName() : Integer.toString(similar.getDistance());
-		}
-	};
-
-	private final ISelectionChangedListener SIMILAR_TABLE_SELECTED = new ISelectionChangedListener() {
-		@Override
-		public void selectionChanged(SelectionChangedEvent event) {
-			SimilarEntry similar = (SimilarEntry)((IStructuredSelection)event.getSelection()).getFirstElement();
-			if (similar != null) {
-				previewer.setFileEntry(similar.getFileEntry());
+		public void widgetSelected(SelectionEvent event) {
+			if (event.detail == SWT.CHECK) {
+				TableItem item = (TableItem)event.item;
+				FileEntry fileEntry = (FileEntry)item.getData();
+				setFileChecked(fileEntry, item.getChecked());
+			} else {
+				previewer.setFileEntry((FileEntry)((TableItem)event.item).getData());
 			}
 		}
 	};
 
-	private final KeyListener SIMILAR_TABLE_SHIFT_LISTENER = new KeyAdapter() {
+	private final KeyListener SIMILAR_TABLE_KEY_LISTENER = new KeyAdapter() {
+		@Override
+		public void keyPressed(KeyEvent event) {
+			if (event.keyCode == SWT.ARROW_DOWN && event.stateMask == SWT.SHIFT &&
+					similarEntryTable.getSelectionIndex() == similarEntryTable.getItemCount() - 1 &&
+					fileEntryTable.getSelectionIndex() < fileEntryTable.getItemCount() - 1) {
+				int newSelectedIndex = fileEntryTable.getSelectionIndex() + 1;
+				setActiveFileEntryItem(fileEntryTable.getItem(newSelectedIndex));
+				fileEntryTable.setSelection(newSelectedIndex);
+				similarEntryTable.setSelection(0);
+				event.doit = false;
+			} else if (event.keyCode == SWT.ARROW_UP && event.stateMask == SWT.SHIFT &&
+					similarEntryTable.getSelectionIndex() == 0 &&
+					fileEntryTable.getSelectionIndex() > 0) {
+				int newSelectedIndex = fileEntryTable.getSelectionIndex() - 1;
+				setActiveFileEntryItem(fileEntryTable.getItem(newSelectedIndex));
+				fileEntryTable.setSelection(newSelectedIndex);
+				similarEntryTable.setSelection(similarEntryTable.getItemCount() - 1);
+				event.doit = false;
+			}
+		}
+
 		@Override
 		public void keyReleased(KeyEvent event) {
 			if (event.keyCode == SWT.SHIFT) {
 				fileEntryTable.forceFocus();
 			}
-		}
-	};
-
-	private final SelectionListener FILE_TABLE_CHECK_LISTENER = new SelectionAdapter() {
-		@Override
-		public void widgetSelected(SelectionEvent event) {
-			if (event.detail != SWT.CHECK) return;
-			TableItem item = (TableItem)event.item;
-			FileEntry file = ((SimilarGroup)item.getData()).getFileEntry();
-			setFileChecked(file, item.getChecked());
-		}
-	};
-
-	private final SelectionListener SIMILAR_TABLE_CHECK_LISTENER = new SelectionAdapter() {
-		@Override
-		public void widgetSelected(SelectionEvent event) {
-			if (event.detail != SWT.CHECK) return;
-			TableItem item = (TableItem)event.item;
-			FileEntry file = ((SimilarEntry)item.getData()).getFileEntry();
-			setFileChecked(file, item.getChecked());
 		}
 	};
 

@@ -37,8 +37,8 @@ class PackageViewer {
 	}
 
 	void createContents(Composite parent) {
-		FontData systemFontData = Display.getCurrent().getSystemFont().getFontData()[0];
-		boldFont = new Font(Display.getCurrent(), systemFontData.getName(), systemFontData.getHeight(), SWT.BOLD);
+		FontData systemFontData = Display.getDefault().getSystemFont().getFontData()[0];
+		boldFont = new Font(Display.getDefault(), systemFontData.getName(), systemFontData.getHeight(), SWT.BOLD);
 		defaultPackageIcon = ImageUtils.loadImage(DEFAULT_PACKAGE_ICON_PATH);
 
 		rootComp = new Composite(parent, SWT.NONE);
