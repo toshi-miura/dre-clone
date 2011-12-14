@@ -168,13 +168,12 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 			Collections.sort(storageEntryList, MEASURE_ENTRY_COMPARATOR);
 
 		// Full-measure
-		simGroupList = Collections.synchronizedList(new ArrayList<SimilarGroup>());
 		int threshold = optionMap.containsKey("threshold") ?
 				Integer.parseInt(optionMap.get("threshold").getValue()) : Integer.MAX_VALUE;
 		executor = Executors.newFixedThreadPool(numThreads);
 		counter = new SynchronizedCounter();
 		for (int i = 0; i < numThreads; i++) {
-			executor.submit(new FullMeasureTask(targetEntryList, storageEntryList, simGroupList, measurer, threshold, counter));
+			executor.submit(new FullMeasureTask(targetEntryList, storageEntryList, measurer, threshold, counter));
 		}
 		executor.shutdown();
 		try {
@@ -188,7 +187,24 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 		logger.progressMeasure(targetEntryList.size(), targetEntryList.size());
 
 		// Sort
+		simGroupList = new ArrayList<SimilarGroup>();
+		for (MeasureEntry mEntry : targetEntryList) {
+			if (mEntry.simList != null)
+				simGroupList.add(new SimilarGroup(mEntry.fileEntry, mEntry.simList));
+		}
 		Collections.sort(simGroupList, SimilarGroup.FIRST_DISTANCE_COMPARATOR);
+		executor = Executors.newFixedThreadPool(numThreads);
+		counter = new SynchronizedCounter(simGroupList.size());
+		for (int i = 0; i < numThreads; i++) {
+			executor.submit(new SortSimilarListTask(simGroupList, counter));
+		}
+		executor.shutdown();
+		try {
+			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			executor.shutdownNow();
+			throw e;
+		}
 
 		// Dispose
 		measurer.dispose();

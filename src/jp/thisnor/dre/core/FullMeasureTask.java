@@ -7,26 +7,67 @@ import java.util.List;
 public class FullMeasureTask implements Runnable {
 	private final Measurer measurer;
 	private final List<MeasureEntry> targetList, storageList;
-	private final List<SimilarGroup> simGroupList;
 	private final int threshold;
 	private final SynchronizedCounter counter;
 
 	public FullMeasureTask(
 			List<MeasureEntry> targetList,
 			List<MeasureEntry> storageList,
-			List<SimilarGroup> simGroupList,
 			Measurer measurer,
 			int threshold,
 			SynchronizedCounter counter) {
 		this.measurer = measurer;
 		this.targetList = targetList;
 		this.storageList = storageList;
-		this.simGroupList = simGroupList;
 		this.threshold = threshold;
 		this.counter = counter;
 	}
 
 	public void run() {
+		if (targetList == storageList) {
+			runWithUniList();
+		} else {
+			runWithSeparatedList();
+		}
+	}
+
+	private void runWithUniList() {
+		int index;
+		while ((index = counter.countup()) < targetList.size()) {
+			MeasureEntry tarEntry = targetList.get(index);
+			MeasureEntry stEntry;
+			List<SimilarEntry> simList = null;
+			int index2 = index + 1;
+			while (index2 < storageList.size() &&
+					(stEntry = storageList.get(index2)).firstDistance <= tarEntry.firstDistance + threshold) {
+				if (!stEntry.fileEntry.getPath().equals(tarEntry.fileEntry.getPath())) {
+					int realDistance = measurer.measure(stEntry.data, tarEntry.data, threshold);
+					if (realDistance <= threshold) {
+						if (simList == null) simList = Collections.synchronizedList(new ArrayList<SimilarEntry>(2));
+						simList.add(new SimilarEntry(stEntry.fileEntry, realDistance));
+						synchronized (stEntry) {
+							if (stEntry.simList == null)
+								stEntry.simList = Collections.synchronizedList(new ArrayList<SimilarEntry>(2));
+							stEntry.simList.add(new SimilarEntry(tarEntry.fileEntry, realDistance));
+						}
+					}
+				}
+				index2++;
+			}
+			if (simList != null) {
+				synchronized (tarEntry) {
+					if (tarEntry.simList != null) {
+						tarEntry.simList.addAll(simList);
+					} else {
+						tarEntry.simList = simList;
+					}
+				}
+			}
+			if (Thread.interrupted()) return;
+		}
+	}
+
+	private void runWithSeparatedList() {
 		int indexInStorageList0 = findIndex(storageList, targetList.get(0).firstDistance);
 		int index;
 		while ((index = counter.countup()) < targetList.size()) {
@@ -44,7 +85,6 @@ public class FullMeasureTask implements Runnable {
 			List<SimilarEntry> simList = null;
 			while (indexInStorageList < storageList.size() &&
 					(stEntry = storageList.get(indexInStorageList)).firstDistance <= tarEntry.firstDistance + threshold) {
-				stEntry = storageList.get(indexInStorageList);
 				if (!stEntry.fileEntry.getPath().equals(tarEntry.fileEntry.getPath())) {
 					int realDistance = measurer.measure(stEntry.data, tarEntry.data, threshold);
 					if (realDistance <= threshold) {
@@ -55,8 +95,7 @@ public class FullMeasureTask implements Runnable {
 				indexInStorageList++;
 			}
 			if (simList != null) {
-				Collections.sort(simList, SimilarEntry.DISTANCE_COMPARATOR);
-				simGroupList.add(new SimilarGroup(tarEntry.fileEntry, simList));
+				tarEntry.simList = simList;
 			}
 			if (Thread.interrupted()) return;
 		}

@@ -444,6 +444,12 @@ class FileDropListViewer {
 				if (item.getData(TABLE_EDITOR_KEY) == null) {
 					attachSubCheckEditor(item);
 				}
+				Future<?> future = (Future<?>)item.getData(TABLE_FUTURE_KEY);
+				if (future != null) future.cancel(true);
+				item.setData(
+						TABLE_FUTURE_KEY,
+						computePropertiesExecutor.submit(new ComputeFilePropertiesTask(item)));
+				listChanged = true;
 			}
 		}
 	};
@@ -466,6 +472,12 @@ class FileDropListViewer {
 					editor.getEditor().dispose();
 					editor.dispose();
 				}
+				Future<?> future = (Future<?>)item.getData(TABLE_FUTURE_KEY);
+				if (future != null) future.cancel(true);
+				item.setData(
+						TABLE_FUTURE_KEY,
+						computePropertiesExecutor.submit(new ComputeFilePropertiesTask(item)));
+				listChanged = true;
 			}
 		}
 	};

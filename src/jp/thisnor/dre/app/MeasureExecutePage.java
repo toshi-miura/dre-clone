@@ -143,7 +143,7 @@ class MeasureExecutePage extends DREPage {
 						);
 				try {
 					task.call();
-					logger.log("Finished.");
+					logger.log(messages.getString("MeasureExecutePage.REPORT_COMPLETED_MESSAGE"));
 					Display.getDefault().asyncExec(new Runnable() {
 						public void run() {
 							loadProgress.setSelection(1);
@@ -152,9 +152,12 @@ class MeasureExecutePage extends DREPage {
 							measureProgress.setMaximum(1);
 						}
 					});
+				} catch (InterruptedException e) {
+					logger.log(messages.getString("MeasureExecutePage.REPORT_CANCELED"));
 				} catch (Exception e) {
+					e.printStackTrace();
 					logger.log(e.getLocalizedMessage());
-					logger.log("Aborted.");
+					logger.log(messages.getString("MeasureExecutePage.REPORT_ABORTED"));
 				}
 				simGroupList = task.getResult();
 				Display.getDefault().asyncExec(new Runnable() {

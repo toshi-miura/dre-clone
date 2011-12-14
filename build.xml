@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="build-all" name="DeadRingerEraser2011">
-	<property name="version" value="0.4.2"/>
+	<property name="version" value="0.4.3"/>
 	<property environment="env"/>
 	<property name="debuglevel" value="source,lines,vars"/>
 	<property name="target" value="1.6"/>
