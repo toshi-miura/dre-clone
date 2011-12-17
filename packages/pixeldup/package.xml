@@ -5,19 +5,19 @@
 		<name>Pixel Duplication</name>
 		<version>1.1</version>
 		<author>jp.thisnor</author>
-		<caption lang="ja">ピクセル完全一致画像の検出アルゴリズム</caption>
-		<description lang="ja">ファイル内容をピクセルレベルで比較します。</description>
-		<caption lang="en">Checks all pixels are equal or not.</caption>
-		<description lang="en">Checks all pixels are equal or not.</description>
+		<caption>!CAPTION!</caption>
+		<description>!DESCRIPTION!</description>
 	</information>
+	<locale>
+		<lang>jp.thisnor.dre.pixeldup.lang</lang>
+	</locale>
 	<class>
 		<measurer>jp.thisnor.dre.pixeldup.PixelDupMeasurer</measurer>
 	</class>
 	<options>
 		<option>
 			<key>hashAlgorithm</key>
-			<name lang="ja">ハッシュアルゴリズム</name>
-			<name lang="en">Hash algorithm</name>
+			<name>!OPTION_HASHALGORITHM!</name>
 			<select>
 				<value>MD5</value>
 				<value>SHA-1</value>
@@ -27,13 +27,17 @@
 		</option>
 		<option>
 			<key>useCache</key>
-			<name lang="ja">キャッシュを使用する</name>
-			<name lang="en">Use cache</name>
+			<name>!OPTION_USECACHE!</name>
 			<select>
-				<value>true</value>
-				<value>false</value>
+				<value>!OPTION_USECACHE_TRUE!</value>
+				<value>!OPTION_USECACHE_FALSE!</value>
 			</select>
-			<default>true</default>
+			<default>!OPTION_USECACHE_TRUE!</default>
+		</option>
+		<option type="hidden">
+			<key>threshold</key>
+			<name>!OPTION_THRESHOLD!</name>
+			<default>0</default>
 		</option>
 	</options>
 </package>

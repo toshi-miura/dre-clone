@@ -1,12 +1,13 @@
 package jp.thisnor.dre.app;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import jp.thisnor.dre.core.MeasurerPackage;
+import jp.thisnor.dre.core.DREException;
 import jp.thisnor.dre.core.MeasureOptionEntry;
+import jp.thisnor.dre.core.MeasurerPackage;
+import jp.thisnor.dre.core.Messages;
 
 import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.swt.SWT;
@@ -58,8 +59,8 @@ public class PackageSelectPage extends DREPage {
 		List<MeasurerPackage> packageList = new ArrayList<MeasurerPackage>();
 		for (File packageFile : PACKAGE_DIR.listFiles()) {
 			try {
-				packageList.add(MeasurerPackage.importPackage(packageFile));
-			} catch (IOException e) {
+				packageList.add(MeasurerPackage.importPackage(packageFile, frame.getMessages().getLocale()));
+			} catch (DREException e) {
 				e.printStackTrace();
 			}
 		}

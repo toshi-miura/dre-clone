@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import jp.thisnor.dre.core.Messages;
 import jp.thisnor.dre.core.PathFilter;
 
 import org.eclipse.jface.preference.PreferenceStore;

@@ -1,12 +1,11 @@
 package jp.thisnor.dre.app;
 
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import jp.thisnor.dre.core.MeasureOptionEntry;
-import jp.thisnor.dre.core.Measurer;
+import jp.thisnor.dre.core.MeasurerPackage;
+import jp.thisnor.dre.core.Messages;
 import jp.thisnor.dre.core.PathFilter;
 import jp.thisnor.dre.core.ProgressListener;
 import jp.thisnor.dre.core.SimilarGroup;
@@ -93,8 +92,7 @@ class MeasureExecutePage extends DREPage {
 		final PathFilter filter = fileSelectPage.getPathFilter();
 
 		PackageSelectPage packageSelectPage = frame.getPage(PackageSelectPage.class);
-		final Measurer measurer = packageSelectPage.getSelectedPackage().getHandler();
-		final Map<String, MeasureOptionEntry> optionMap = packageSelectPage.getSelectedPackage().getOptionMap();
+		final MeasurerPackage mpack = packageSelectPage.getSelectedPackage();
 		final int numThreads = packageSelectPage.getNumThreads();
 
 		final ProgressListener logger = new ProgressListener() {
@@ -138,8 +136,8 @@ class MeasureExecutePage extends DREPage {
 			public void run() {
 				WholeTask task = new WholeTask(
 						targetFileList, storageFileList, filter,
-						measurer, optionMap, numThreads,
-						logger
+						mpack, numThreads,
+						logger, messages.getLocale()
 						);
 				try {
 					task.call();
@@ -186,9 +184,9 @@ class MeasureExecutePage extends DREPage {
 
 	@Override
 	void previousRequested() {
-		if (executor != null && !executor.isTerminated()) {
+		if (executor != null) {
 			MessageBox msgBox = new MessageBox(Display.getDefault().getActiveShell(), SWT.YES | SWT.NO);
-			msgBox.setText(messages.getString("MeasureExecutePage.CONFIRM_ABORT_TITLE"));
+			msgBox.setText(messages.getString(executor.isTerminated() ? "MeasureExecutePage.CONFIRM_BACK_MESSAGE" : "MeasureExecutePage.CONFIRM_ABORT_TITLE"));
 			msgBox.setMessage(messages.getString("MeasureExecutePage.CONFIRM_ABORT_MESSAGE"));
 			if (msgBox.open() == SWT.NO) return;
 		}

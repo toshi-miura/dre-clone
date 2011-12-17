@@ -3,22 +3,21 @@ package jp.thisnor.dre.core;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class WholeTask implements Callable<List<SimilarGroup>> {
-	private final Measurer measurer;
 	private final List<String> targetList, storageList;
 	private final PathFilter filter;
-	private final Map<String, MeasureOptionEntry> optionMap;
+	private final MeasurerPackage mpack;
 	private final int numThreads;
 	private final ProgressListener logger;
+	private final Locale locale;
 
 	private volatile List<SimilarGroup> simGroupList;
 
@@ -31,21 +30,26 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 
 	public WholeTask(
 			List<String> targetList, List<String> storageList, PathFilter filter,
-			Measurer measurer, Map<String, MeasureOptionEntry> optionMap, int numThreads,
-			ProgressListener logger) {
+			MeasurerPackage mpack, int numThreads,
+			ProgressListener logger, Locale locale) {
 		this.targetList = targetList;
 		this.storageList = storageList;
 		this.filter = filter;
-		this.measurer = measurer;
-		this.optionMap = new HashMap<String, MeasureOptionEntry>(optionMap);
+		this.mpack = mpack;
 		this.numThreads = numThreads;
 		this.logger = logger;
+		this.locale = locale;
 	}
 
 	public List<SimilarGroup> call() throws DREException, InterruptedException {
-		if (measurer == null) throw new DREException("No measurer specified.");
-		if (targetList == null) throw new DREException("target set is empty.");
-		if (numThreads <= 0) throw new IllegalArgumentException("numThreads must be >= 1, got " + numThreads);
+		Messages messages = new Messages("jp.thisnor.dre.core.lang", locale, this.getClass().getClassLoader());
+
+		if (mpack == null) throw new DREException(messages.getString("WholeTask.MEASURER_NOT_SPECIFIED"));
+		if (targetList == null) throw new DREException(messages.getString("WholeTask.NO_TARGET"));
+		if (storageList == null) throw new DREException(messages.getString("WholeTask.NO_STORAGE"));
+		if (numThreads <= 0) throw new IllegalArgumentException(messages.getString("WholeTask.ILLEGAL_NUM_THREADS"));
+
+		Measurer measurer = mpack.getHandler();
 
 		ExecutorService executor;
 		SynchronizedCounter counter;
@@ -57,7 +61,7 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 		List<MeasureEntry> targetEntryList = new ArrayList<MeasureEntry>();
 		List<MeasureEntry> storageEntryList = null;
 		executor = Executors.newFixedThreadPool(numThreads);
-		if (storageList == null || storageList == targetList) {
+		if (storageList == targetList) {
 			storageEntryList = targetEntryList;
 			counter = new SynchronizedCounter();
 			for (int i = 0; i < numThreads; i++) {
@@ -83,14 +87,14 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 		}
 
 		if (targetEntryList.isEmpty()) {
-			throw new DREException("Target set is empty.");
+			throw new DREException(messages.getString("WholeTask.EMPTY_TARGET"));
 		}
 		if (storageEntryList.isEmpty()) {
-			throw new DREException("Search-in set is empty.");
+			throw new DREException(messages.getString("WholeTask.EMPTY_STORAGE"));
 		}
 
 		// Init
-		measurer.init(optionMap);
+		measurer.init(mpack);
 
 		// Load
 		int fullFileCount = targetEntryList.size() + (targetEntryList.size() == storageEntryList.size() ? 0 : storageEntryList.size());
@@ -138,8 +142,15 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 			}
 		}
 
+		if (targetEntryList.isEmpty()) {
+			throw new DREException(messages.getString("WholeTask.EMPTY_TARGET"));
+		}
+		if (storageEntryList.isEmpty()) {
+			throw new DREException(messages.getString("WholeTask.EMPTY_STORAGE"));
+		}
+
 		t1 = System.nanoTime();
-		logger.log(String.format("Finished loading. (%.2fsec)", (double)((t1 - t0) / 1000000) / 1000.0));
+		logger.log(String.format(messages.getString("WholeTask.FINISHED_LOADING"), (double)((t1 - t0) / 1000000) / 1000.0));
 		t0 = System.nanoTime();
 
 		// First-measure
@@ -168,8 +179,8 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 			Collections.sort(storageEntryList, MEASURE_ENTRY_COMPARATOR);
 
 		// Full-measure
-		int threshold = optionMap.containsKey("threshold") ?
-				Integer.parseInt(optionMap.get("threshold").getValue()) : Integer.MAX_VALUE;
+		int threshold = mpack.getOptionMap().containsKey("threshold") ?
+				Integer.parseInt(mpack.getOptionMap().get("threshold").getValue()) : Integer.MAX_VALUE;
 		executor = Executors.newFixedThreadPool(numThreads);
 		counter = new SynchronizedCounter();
 		for (int i = 0; i < numThreads; i++) {
@@ -192,9 +203,8 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 			if (mEntry.simList != null)
 				simGroupList.add(new SimilarGroup(mEntry.fileEntry, mEntry.simList));
 		}
-		Collections.sort(simGroupList, SimilarGroup.FIRST_DISTANCE_COMPARATOR);
 		executor = Executors.newFixedThreadPool(numThreads);
-		counter = new SynchronizedCounter(simGroupList.size());
+		counter = new SynchronizedCounter();
 		for (int i = 0; i < numThreads; i++) {
 			executor.submit(new SortSimilarListTask(simGroupList, counter));
 		}
@@ -205,6 +215,7 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 			executor.shutdownNow();
 			throw e;
 		}
+		Collections.sort(simGroupList, SimilarGroup.FIRST_DISTANCE_COMPARATOR);
 
 		// Dispose
 		measurer.dispose();
@@ -218,7 +229,7 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 		}
 
 		t1 = System.nanoTime();
-		logger.log(String.format("Finished comparing. (%.2fsec)", (double)((t1 - t0) / 1000000) / 1000.0));
+		logger.log(String.format(messages.getString("WholeTask.FINISHED_COMPARING"), (double)((t1 - t0) / 1000000) / 1000.0));
 
 		return simGroupList;
 	}

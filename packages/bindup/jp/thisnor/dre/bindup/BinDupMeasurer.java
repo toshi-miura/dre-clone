@@ -3,18 +3,14 @@ package jp.thisnor.dre.bindup;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 import jp.thisnor.dre.core.FileEntry;
 import jp.thisnor.dre.core.Measurer;
-import jp.thisnor.dre.core.MeasureOptionEntry;
+import jp.thisnor.dre.core.MeasurerPackage;
 
 public class BinDupMeasurer implements Measurer {
 	@Override
-	public void init(Map<String, MeasureOptionEntry> optionMap) {
-		MeasureOptionEntry thresholdOption = new MeasureOptionEntry("threshold");
-		thresholdOption.setValue("0");
-		optionMap.put("threshold", thresholdOption);
+	public void init(MeasurerPackage mpack) {
 	}
 
 	@Override

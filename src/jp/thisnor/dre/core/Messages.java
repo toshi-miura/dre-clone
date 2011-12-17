@@ -1,26 +1,27 @@
-package jp.thisnor.dre.app;
+package jp.thisnor.dre.core;
 
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 public class Messages {
-	private static final String BUNDLE_NAME = "lang.messages";
-
 	private final Locale locale;
 	private final ResourceBundle resBundle;
 
-	public Messages(Locale locale) {
-		this(locale, Messages.class.getClassLoader());
+	public Messages(String baseName, Locale locale) {
+		this(baseName, locale, Messages.class.getClassLoader());
 	}
 
-	public Messages(Locale locale, ClassLoader clsLoader) {
+	public Messages(String baseName, Locale locale, ClassLoader clsLoader) {
 		ResourceBundle resBundle = null;
 		try {
-			resBundle = ResourceBundle.getBundle(BUNDLE_NAME, locale, clsLoader);
+			resBundle = ResourceBundle.getBundle(baseName + ".messages", locale, clsLoader);
 		} catch (MissingResourceException e) {
-			locale = Locale.JAPANESE;
-			resBundle = ResourceBundle.getBundle(BUNDLE_NAME, locale, clsLoader);
+			locale = Locale.ENGLISH;
+			try {
+				resBundle = ResourceBundle.getBundle(baseName + ".messages", locale, clsLoader);
+			} catch (MissingResourceException e2) {
+			}
 		}
 		this.locale = locale;
 		this.resBundle = resBundle;

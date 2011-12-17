@@ -10,6 +10,7 @@ import java.util.concurrent.Future;
 import javax.imageio.ImageIO;
 
 import jp.thisnor.dre.core.FileEntry;
+import jp.thisnor.dre.core.Messages;
 import jp.thisnor.dre.core.NormalFileEntry;
 
 import org.eclipse.swt.SWT;

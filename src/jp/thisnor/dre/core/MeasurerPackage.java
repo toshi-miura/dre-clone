@@ -21,7 +21,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -38,6 +37,7 @@ public class MeasurerPackage {
 	private final Image image;
 	private final Measurer handler;
 	private final Map<String, MeasureOptionEntry> optionMap;
+	private final Messages messages;
 
 	private MeasurerPackage(PackageDescription desc, ClassLoader clsLoader) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
 		key = desc.key;
@@ -49,6 +49,7 @@ public class MeasurerPackage {
 		image = (desc.image != null) ? new Image(Display.getDefault(), clsLoader.getResourceAsStream(desc.image)) : null;
 		handler = clsLoader.loadClass(desc.handlerClsPath).asSubclass(Measurer.class).newInstance();
 		optionMap = desc.optionMap;
+		messages = desc.messages;
 	}
 
 	public String getKey() {
@@ -87,57 +88,69 @@ public class MeasurerPackage {
 		return optionMap;
 	}
 
-	public static MeasurerPackage importPackage(String packageName) throws IOException {
+	public String getLocalizedMessage(String key) {
+		return messages.getString(key);
+	}
+
+	public static MeasurerPackage importPackage(String packageName) throws DREException {
+		return importPackage(packageName, Locale.getDefault());
+	}
+
+	public static MeasurerPackage importPackage(String packageName, Locale locale) throws DREException {
 		try {
 			if (new File(PACKAGE_DIR, packageName).isDirectory()) {
-				return importDirPackage(new File(PACKAGE_DIR, packageName));
+				return importDirPackage(new File(PACKAGE_DIR, packageName), locale);
 			} else {
-				return importJarPackage(new File(PACKAGE_DIR, packageName + ".jar"));
+				return importJarPackage(new File(PACKAGE_DIR, packageName + ".jar"), locale);
 			}
 		} catch (Exception e) {
-			throw new IOException(String.format("Failed in loading package: %s.", packageName), e);
+			throw new DREException(String.format("Failed in loading package: %s.", packageName), e);
 		}
 	}
 
-	public static MeasurerPackage importPackage(File packageFile) throws IOException {
+	public static MeasurerPackage importPackage(File packageFile) throws DREException {
+		return importPackage(packageFile, Locale.getDefault());
+	}
+
+	public static MeasurerPackage importPackage(File packageFile, Locale locale) throws DREException {
 		try {
 			if (packageFile.isDirectory()) {
-				return importDirPackage(packageFile);
+				return importDirPackage(packageFile, locale);
 			} else {
-				return importJarPackage(packageFile);
+				return importJarPackage(packageFile, locale);
 			}
 		} catch (Exception e) {
-			throw new IOException(String.format("Failed in loading package: %s.", packageFile.getPath()), e);
+			throw new DREException(String.format("Failed in loading package: %s.", packageFile.getPath()), e);
 		}
 	}
 
-	private static MeasurerPackage importJarPackage(File jar) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+	private static MeasurerPackage importJarPackage(File jar, Locale locale) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+		ClassLoader clsLoader = new JarPackageClassLoader(jar);
 		PackageDescription desc = null;
 		JarFile jarFile = null;
 		try {
 			jarFile = new JarFile(jar);
-			desc = importPackageDescription(jarFile.getInputStream(jarFile.getEntry("package.xml"))); //$NON-NLS-1$
+			desc = importPackageDescription(jarFile.getInputStream(jarFile.getEntry("package.xml")), locale, clsLoader); //$NON-NLS-1$
 		} finally {
 			try {
 				if (jarFile != null) jarFile.close();
 			} catch (IOException e) {}
 		}
-		ClassLoader clsLoader = new JarPackageClassLoader(jar);
 		return new MeasurerPackage(desc, clsLoader);
 	}
 
-	private static MeasurerPackage importDirPackage(File dir) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+	private static MeasurerPackage importDirPackage(File dir, Locale locale) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException {
+		ClassLoader clsLoader = new DirPackageClassLoader(dir);
 		PackageDescription desc = null;
 		InputStream in = null;
 		try {
 			in = new BufferedInputStream(new FileInputStream(dir.getPath() + File.separator + "package.xml")); //$NON-NLS-1$
-			desc = importPackageDescription(in);
+			desc = importPackageDescription(in, locale, clsLoader);
 		} finally {
 			try {
 				if (in != null) in.close();
 			} catch (IOException e) {}
 		}
-		ClassLoader clsLoader = new DirPackageClassLoader(dir);
 		return new MeasurerPackage(desc, clsLoader);
 	}
 
@@ -151,22 +164,25 @@ public class MeasurerPackage {
 		private String image;
 		private String handlerClsPath;
 		private Map<String, MeasureOptionEntry> optionMap;
+		private Messages messages;
 	}
 
-	private static PackageDescription importPackageDescription(InputStream in) throws IOException {
-		Locale locale = Locale.getDefault();
+	private static PackageDescription importPackageDescription(InputStream in, Locale locale, ClassLoader clsLoader) throws IOException {
 		try {
 			DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
 			DocumentBuilder db = f.newDocumentBuilder();
 			Document doc = db.parse(in);
 			PackageDescription desc = new PackageDescription();
+			Element localeElement = (Element)doc.getElementsByTagName("locale").item(0);
+			Messages messages = new Messages(getNodeValue(localeElement, "lang"), locale, clsLoader);
+			desc.messages = messages;
 			Element infoElement = (Element)doc.getElementsByTagName("information").item(0); //$NON-NLS-1$
 			desc.key = getNodeValue(infoElement, "key"); //$NON-NLS-1$
-			desc.name = getNodeValue(infoElement, "name", locale); //$NON-NLS-1$
-			desc.version = getNodeValue(infoElement, "version"); //$NON-NLS-1$
-			desc.author = getNodeValue(infoElement, "author", locale); //$NON-NLS-1$
-			desc.caption = getNodeValue(infoElement, "caption", locale); //$NON-NLS-1$
-			desc.description = getNodeValue(infoElement, "description", locale); //$NON-NLS-1$
+			desc.name = toLocalizedMessage(getNodeValue(infoElement, "name"), messages); //$NON-NLS-1$
+			desc.version = toLocalizedMessage(getNodeValue(infoElement, "version"), messages); //$NON-NLS-1$
+			desc.author = toLocalizedMessage(getNodeValue(infoElement, "author"), messages); //$NON-NLS-1$
+			desc.caption = toLocalizedMessage(getNodeValue(infoElement, "caption"), messages); //$NON-NLS-1$
+			desc.description = toLocalizedMessage(getNodeValue(infoElement, "description"), messages); //$NON-NLS-1$
 			desc.image = getNodeValue(infoElement, "icon"); //$NON-NLS-1$
 			Element classElement = (Element)doc.getElementsByTagName("class").item(0); //$NON-NLS-1$
 			desc.handlerClsPath = getNodeValue(classElement, "measurer"); //$NON-NLS-1$
@@ -175,17 +191,18 @@ public class MeasurerPackage {
 			for (int i = 0; i < optionList.getLength(); i++) {
 				Element optionElement = (Element)optionList.item(i);
 				MeasureOptionEntry option = new MeasureOptionEntry(getNodeValue(optionElement, "key")); //$NON-NLS-1$
-				option.setName(getNodeValue(optionElement, "name", locale)); //$NON-NLS-1$
-				option.setDefaultValue(getNodeValue(optionElement, "default")); //$NON-NLS-1$
+				option.setName(toLocalizedMessage(getNodeValue(optionElement, "name"), messages)); //$NON-NLS-1$
+				option.setDefaultValue(toLocalizedMessage(getNodeValue(optionElement, "default"), messages)); //$NON-NLS-1$
 				NodeList selectNodes = optionElement.getElementsByTagName("select"); //$NON-NLS-1$
 				if (selectNodes.getLength() > 0) {
 					List<String> candList = new ArrayList<String>(4);
 					NodeList valueNodes = ((Element)selectNodes.item(0)).getElementsByTagName("value"); //$NON-NLS-1$
 					for (int j = 0; j < valueNodes.getLength(); j++) {
-						candList.add(valueNodes.item(j).getFirstChild().getNodeValue());
+						candList.add(toLocalizedMessage(valueNodes.item(j).getFirstChild().getNodeValue(), messages));
 					}
 					option.setCandidateList(candList);
 				}
+				if (optionElement.getAttribute("type").equals("hidden")) option.setHidden(true);
 				desc.optionMap.put(option.getKey(), option);
 			}
 			return desc;
@@ -200,33 +217,21 @@ public class MeasurerPackage {
  		}
 	}
 
+	private static String toLocalizedMessage(String text, Messages messages) {
+		if (text.charAt(0) == '!' && text.charAt(text.length() - 1) == '!') {
+			return messages.getString(text.substring(1, text.length() - 1));
+		} else {
+			return text;
+		}
+	}
+
 	private static String getNodeValue(Element element, String tagName) {
+		if (element == null) return null;
 		NodeList l = element.getElementsByTagName(tagName);
 		if (l.getLength() == 0) return null;
 		Node n = l.item(0).getFirstChild();
 		if (n.getNodeType() != Node.TEXT_NODE) return null;
 		return n.getNodeValue();
-	}
-
-	private static String getNodeValue(Element element, String tagName, Locale locale) {
-		NodeList l = element.getElementsByTagName(tagName);
-		if (l.getLength() == 0) return null;
-		Node properNode = null;
-		for (int i = 0; i < l.getLength(); i++) {
-			Node n = l.item(i);
-			NamedNodeMap attrMap = n.getAttributes();
-			Node langNode = attrMap.getNamedItem("lang");
-			if (langNode != null && locale.getLanguage().equals(langNode.getNodeValue())) {
-				properNode = n;
-				break;
-			} else if (properNode == null && langNode == null) {
-				properNode = n;
-			}
-		}
-		if (properNode == null) properNode = l.item(0);
-		Node textNode = properNode.getFirstChild();
-		if (textNode.getNodeType() != Node.TEXT_NODE) return null;
-		return textNode.getNodeValue();
 	}
 
 	private static class JarPackageClassLoader extends ClassLoader {

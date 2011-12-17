@@ -1,16 +1,17 @@
 package jp.thisnor.dre.app;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
+import jp.thisnor.dre.core.DREException;
 import jp.thisnor.dre.core.MeasureOptionEntry;
 import jp.thisnor.dre.core.MeasurerPackage;
 import jp.thisnor.dre.core.PathFilter;
@@ -110,8 +111,8 @@ class ConsoleApp {
 		System.err.println("Loading the package...");
 		MeasurerPackage measurerPackage = null;
 		try {
-			measurerPackage = MeasurerPackage.importPackage(packageName);
-		} catch (IOException e) {
+			measurerPackage = MeasurerPackage.importPackage(packageName, Locale.ENGLISH);
+		} catch (DREException e) {
 			System.err.println("ERROR: Not found specified package: " + packageName);
 			return false;
 		}
@@ -145,8 +146,8 @@ class ConsoleApp {
 		WholeTask task = new WholeTask(
 				targetPathList,
 				storagePathList, filter,
-				measurerPackage.getHandler(), optionMap, numThreads,
-				STDERR_PROGRESS_LISTENER
+				measurerPackage, numThreads,
+				STDERR_PROGRESS_LISTENER, Locale.ENGLISH
 				);
 		List<SimilarGroup> simGroupList = null;
 		try {

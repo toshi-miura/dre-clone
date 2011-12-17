@@ -5,11 +5,12 @@
 		<name>Binary Duplication</name>
 		<version>1.0</version>
 		<author>jp.thisnor</author>
-		<caption lang="ja">完全一致ファイルの検出アルゴリズム</caption>
-		<description lang="ja">ファイル内容をバイナリレベルで比較します。画像に限らず、任意のファイルを比較できます。</description>
-		<caption lang="en">Checks equality in binary level.</caption>
-		<description lang="en">Checks equality in binary level. It's able to check any files, not only images.</description>
+		<caption>!CAPTION!</caption>
+		<description>!DESCRIPTION!</description>
 	</information>
+	<locale>
+		<lang>jp.thisnor.dre.bindup.lang</lang>
+	</locale>
 	<class>
 		<measurer>jp.thisnor.dre.bindup.BinDupMeasurer</measurer>
 	</class>

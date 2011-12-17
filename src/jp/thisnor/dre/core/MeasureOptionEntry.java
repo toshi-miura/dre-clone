@@ -8,6 +8,7 @@ public class MeasureOptionEntry {
 	private String defaultValue;
 	private List<String> candidateList;
 	private String value;
+	private boolean hidden;
 
 	public MeasureOptionEntry(String key) {
 		this.key = key;
@@ -43,6 +44,14 @@ public class MeasureOptionEntry {
 
 	public void setValue(String value) {
 		this.value = value;
+	}
+
+	public boolean isHidden() {
+		return hidden;
+	}
+
+	public void setHidden(boolean hidden) {
+		this.hidden = hidden;
 	}
 
 	public String getKey() {

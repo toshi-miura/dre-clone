@@ -1,5 +1,7 @@
 package jp.thisnor.dre.app;
 
+import jp.thisnor.dre.core.Messages;
+
 import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;

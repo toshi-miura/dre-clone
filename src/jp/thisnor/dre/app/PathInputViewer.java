@@ -2,6 +2,8 @@ package jp.thisnor.dre.app;
 
 import java.io.File;
 
+import jp.thisnor.dre.core.Messages;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;

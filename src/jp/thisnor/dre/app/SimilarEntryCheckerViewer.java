@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import jp.thisnor.dre.core.FileEntry;
+import jp.thisnor.dre.core.Messages;
 import jp.thisnor.dre.core.SimilarEntry;
 import jp.thisnor.dre.core.SimilarGroup;
 

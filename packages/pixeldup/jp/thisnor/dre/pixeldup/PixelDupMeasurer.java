@@ -17,7 +17,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -26,6 +25,7 @@ import javax.imageio.ImageIO;
 import jp.thisnor.dre.core.FileEntry;
 import jp.thisnor.dre.core.Measurer;
 import jp.thisnor.dre.core.MeasureOptionEntry;
+import jp.thisnor.dre.core.MeasurerPackage;
 
 public class PixelDupMeasurer implements Measurer {
 	private static final File CACHE_DIR = new File("cache");
@@ -39,9 +39,9 @@ public class PixelDupMeasurer implements Measurer {
 	private static final int PREF_QUEUE_SIZE = 64;
 
 	@Override
-	public void init(Map<String, MeasureOptionEntry> optionMap) {
-		algorithm = optionMap.get("hashAlgorithm").getValue();
-		useCache = optionMap.get("useCache").getValue().equals("true");
+	public void init(MeasurerPackage mpack) {
+		algorithm = mpack.getOptionMap().get("hashAlgorithm").getValue();
+		useCache = mpack.getOptionMap().get("useCache").getValue().equals(mpack.getLocalizedMessage("OPTION_USECACHE_TRUE"));
 		if (useCache) {
 			initDB();
 			storeCacheQueue = new ConcurrentLinkedQueue<CacheEntry>();
@@ -49,7 +49,7 @@ public class PixelDupMeasurer implements Measurer {
 
 		MeasureOptionEntry thresholdOption = new MeasureOptionEntry("threshold");
 		thresholdOption.setValue("1");
-		optionMap.put("threshold", thresholdOption);
+		mpack.getOptionMap().put("threshold", thresholdOption);
 	}
 
 	@Override
@@ -158,7 +158,7 @@ public class PixelDupMeasurer implements Measurer {
 			Statement stat = conn.createStatement();
 			ResultSet res = stat.executeQuery(String.format(
 					"SELECT hash FROM %s WHERE name = %s AND date = %s;",
-					TABLE_NAME, entry.getName(), entry.getLastModified()));
+					TABLE_NAME, entry.getPath(), entry.getLastModified()));
 			if (!res.next()) return null;
 			byte[] hash = res.getBytes(1);
 			if (res.next()) return null;
@@ -196,7 +196,7 @@ public class PixelDupMeasurer implements Measurer {
 			while ((cacheEntry = storeCacheQueue.poll()) != null) {
 				PreparedStatement stat = conn.prepareStatement(String.format(
 						"INSERT INTO %s VALUES(%s, %s, ?);",
-						TABLE_NAME, cacheEntry.fileEntry.getName(), cacheEntry.fileEntry.getLastModified()));
+						TABLE_NAME, cacheEntry.fileEntry.getPath(), cacheEntry.fileEntry.getLastModified()));
 				stat.setBytes(1, cacheEntry.data.hash);
 				stat.executeUpdate();
 			}

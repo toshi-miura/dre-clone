@@ -1,23 +1,23 @@
 <?xml version="1.0"?>
-<package>
+<dre-measurer-package version="1.0">
 	<information>
 		<key>jp.thisnor.dre.lls</key>
 		<name>Loose Luminance Similarity</name>
 		<version>1.2</version>
 		<author>jp.thisnor</author>
-		<caption lang="ja">類似検出アルゴリズム</caption>
-		<description lang="ja">よく似た画像を検出するためのアルゴリズムです。スケール変換、色相変換、ワンポイントやテロップ・文字などが追加された画像も含めて検出します。この方法では、正規化された輝度を特徴量として用います。</description>
-		<caption lang="en">Detects similar images, including resized or compressed.</caption>
-		<description lang="en">Detects similar images. It will find images which was duplicated, resized, hue-transformed or added some texts and logos.</description>
+		<caption>!CAPTION!</caption>
+		<description>!DESCRIPTION!</description>
 	</information>
+	<locale>
+		<lang>jp.thisnor.dre.lls.lang</lang>
+	</locale>
 	<class>
 		<measurer>jp.thisnor.dre.lls.LLSMeasurer</measurer>
 	</class>
 	<options>
 		<option>
 			<key>distType</key>
-			<name lang="ja">距離関数</name>
-			<name lang="en">Distance function</name>
+			<name>!OPTION_DISTTYPE!</name>
 			<select>
 				<value>Euclidean</value>
 				<value>Manhattan</value>
@@ -27,19 +27,17 @@
 		</option>
 		<option>
 			<key>threshold</key>
-			<name lang="ja">スレッショルド</name>
-			<name lang="en">Threshold</name>
+			<name>!OPTION_THRESHOLD!</name>
 			<default>100</default>
 		</option>
 		<option>
 			<key>useCache</key>
-			<name lang="ja">キャッシュを使用する</name>
-			<name lang="en">Use cache</name>
+			<name>!OPTION_USECACHE!</name>
 			<select>
-				<value>true</value>
-				<value>false</value>
+				<value>!OPTION_USECACHE_TRUE!</value>
+				<value>!OPTION_USECACHE_FALSE!</value>
 			</select>
-			<default>true</default>
+			<default>!OPTION_USECACHE_TRUE!</default>
 		</option>
 	</options>
-</package>
+</dre-measurer-package>

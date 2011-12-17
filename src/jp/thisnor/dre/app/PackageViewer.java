@@ -1,6 +1,7 @@
 package jp.thisnor.dre.app;
 
 import jp.thisnor.dre.core.MeasurerPackage;
+import jp.thisnor.dre.core.Messages;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;

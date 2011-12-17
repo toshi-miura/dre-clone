@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import jp.thisnor.dre.core.Messages;
+
 import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
@@ -32,6 +34,7 @@ import org.eclipse.swt.widgets.Shell;
 
 class DREFrame {
 	private static final String PREFERENCES_PATH = "prefs"; //$NON-NLS-1$
+	private static final String LANG_BASENAME = "jp.thisnor.dre.app.lang";
 
 	private static final String
 		PREFS_LANGUAGE_KEY = DREFrame.class.getName() + ".lang",
@@ -114,7 +117,10 @@ class DREFrame {
 		prefs.setDefault(PREFS_SHELL_WIDTH_KEY, 840);
 		prefs.setDefault(PREFS_SHELL_HEIGHT_KEY, 540);
 
-		messages = new Messages(new Locale(prefs.getString(PREFS_LANGUAGE_KEY)), this.getClass().getClassLoader());
+		messages = new Messages(
+				LANG_BASENAME,
+				new Locale(prefs.getString(PREFS_LANGUAGE_KEY)),
+				this.getClass().getClassLoader());
 
 		pageMap = new HashMap<Class<? extends DREPage>, DREPage>();
 		putPage(FileEntrySelectPage.class, new FileEntrySelectPage(this));

@@ -3,18 +3,17 @@ package jp.thisnor.dre.bindup.sample;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Map;
 
 import jp.thisnor.dre.core.FileEntry;
 import jp.thisnor.dre.core.Measurer;
-import jp.thisnor.dre.core.MeasureOptionEntry;
+import jp.thisnor.dre.core.MeasurerPackage;
 
 public class BinDupMeasurer implements Measurer {
 	/**
 	 * 初期化処理。convertが呼ばれる前に、メインスレッドから一度だけ呼び出される。
 	 */
 	@Override
-	public void init(Map<String, MeasureOptionEntry> optionMap) {
+	public void init(MeasurerPackage mpack) {
 	}
 
 	/**

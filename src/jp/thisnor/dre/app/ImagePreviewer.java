@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import jp.thisnor.dre.core.FileEntry;
+import jp.thisnor.dre.core.Messages;
 
 import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.swt.SWT;

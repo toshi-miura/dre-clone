@@ -1,9 +1,12 @@
 package jp.thisnor.dre.app;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import jp.thisnor.dre.core.MeasureOptionEntry;
+import jp.thisnor.dre.core.Messages;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
@@ -79,7 +82,12 @@ class OptionTableViewer {
 		public Object[] getElements(Object inputElement) {
 			@SuppressWarnings("unchecked")
 			Map<String, MeasureOptionEntry> optionMap = (Map<String, MeasureOptionEntry>)inputElement;
-			return optionMap.values().toArray();
+			List<MeasureOptionEntry> entryList = new ArrayList<MeasureOptionEntry>(optionMap.size());
+			for (Iterator<MeasureOptionEntry> it = optionMap.values().iterator(); it.hasNext(); ) {
+				MeasureOptionEntry e = it.next();
+				if (!e.isHidden()) entryList.add(e);
+			}
+			return entryList.toArray();
 		}
 	};
 
