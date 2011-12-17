@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import jp.thisnor.dre.core.DREException;
 import jp.thisnor.dre.core.MeasurerPackage;
 import jp.thisnor.dre.core.Messages;
 import jp.thisnor.dre.core.PathFilter;
@@ -150,20 +151,23 @@ class MeasureExecutePage extends DREPage {
 							measureProgress.setMaximum(1);
 						}
 					});
+					simGroupList = task.getResult();
+					Display.getDefault().asyncExec(new Runnable() {
+						public void run() {
+							if (!frame.getShell().isDisposed())
+								frame.setNextButtonEnabled(true);
+						}
+					});
 				} catch (InterruptedException e) {
 					logger.log(messages.getString("MeasureExecutePage.REPORT_CANCELED"));
+				} catch (DREException e) {
+					logger.log(e.getLocalizedMessage());
+					logger.log(messages.getString("MeasureExecutePage.REPORT_ABORTED"));
 				} catch (Exception e) {
 					e.printStackTrace();
 					logger.log(e.getLocalizedMessage());
 					logger.log(messages.getString("MeasureExecutePage.REPORT_ABORTED"));
 				}
-				simGroupList = task.getResult();
-				Display.getDefault().asyncExec(new Runnable() {
-					public void run() {
-						if (!frame.getShell().isDisposed())
-							frame.setNextButtonEnabled(true);
-					}
-				});
 			}
 		});
 		executor.shutdown();
