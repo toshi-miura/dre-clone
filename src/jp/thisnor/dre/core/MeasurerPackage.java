@@ -261,6 +261,62 @@ public class MeasurerPackage {
 				} catch (IOException e) {}
 			}
 		}
+
+		@Override
+		public InputStream getResourceAsStream(String name) {
+			try {
+				return new JarResourceInputStream(file, name);
+			} catch (IOException e) {
+				return null;
+			}
+		}
+	}
+
+	private static class JarResourceInputStream extends InputStream {
+		private final JarFile jarFile;
+		private final InputStream in;
+		private JarResourceInputStream(File file, String entry) throws IOException {
+			this.jarFile = new JarFile(file);
+			ZipEntry zipEntry = jarFile.getEntry(entry);
+			if (zipEntry == null) throw new IOException();
+			this.in = jarFile.getInputStream(zipEntry);
+		}
+		public int read() throws IOException {
+			return in.read();
+		}
+		public int hashCode() {
+			return in.hashCode();
+		}
+		public int read(byte[] b) throws IOException {
+			return in.read(b);
+		}
+		public boolean equals(Object obj) {
+			return in.equals(obj);
+		}
+		public int read(byte[] b, int off, int len) throws IOException {
+			return in.read(b, off, len);
+		}
+		public long skip(long n) throws IOException {
+			return in.skip(n);
+		}
+		public int available() throws IOException {
+			return in.available();
+		}
+		public String toString() {
+			return in.toString();
+		}
+		public void close() throws IOException {
+			jarFile.close();
+		}
+		public void mark(int readlimit) {
+			in.mark(readlimit);
+		}
+		public void reset() throws IOException {
+			in.reset();
+		}
+		public boolean markSupported() {
+			return in.markSupported();
+		}
 	}
 
 	private static class DirPackageClassLoader extends ClassLoader {

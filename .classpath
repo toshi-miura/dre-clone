@@ -3,8 +3,8 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" output="packages/bindupsample" path="packages/bindupsample"/>
 	<classpathentry kind="src" output="packages/bindup" path="packages/bindup"/>
-	<classpathentry kind="src" output="packages/lls" path="packages/lls"/>
 	<classpathentry kind="src" output="packages/pixeldup" path="packages/pixeldup"/>
+	<classpathentry kind="src" path="packages/lls"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.core.commands_3.6.0.I20100512-1500.jar"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.equinox.common_3.6.0.v20100503.jar"/>

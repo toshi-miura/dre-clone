@@ -130,7 +130,7 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 				throw e;
 			}
 		}
-		logger.progressLoad(fullFileCount, fullFileCount);
+		logger.progressLoad(1, 1);
 
 		// Remove failed entry
 		for (Iterator<MeasureEntry> it = targetEntryList.iterator(); it.hasNext(); ) {
@@ -195,7 +195,7 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 			executor.shutdownNow();
 			throw e;
 		}
-		logger.progressMeasure(targetEntryList.size(), targetEntryList.size());
+		logger.progressMeasure(1, 1);
 
 		// Sort
 		simGroupList = new ArrayList<SimilarGroup>();

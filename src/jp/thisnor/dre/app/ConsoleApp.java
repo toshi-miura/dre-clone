@@ -144,8 +144,7 @@ class ConsoleApp {
 
 		System.err.println("Doing detection...");
 		WholeTask task = new WholeTask(
-				targetPathList,
-				storagePathList, filter,
+				targetPathList,	storagePathList == null ? targetPathList : storagePathList, filter,
 				measurerPackage, numThreads,
 				STDERR_PROGRESS_LISTENER, Locale.ENGLISH
 				);

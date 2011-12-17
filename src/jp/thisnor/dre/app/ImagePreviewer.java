@@ -183,7 +183,8 @@ public class ImagePreviewer {
 			Display.getDefault().syncExec(new Runnable() {
 				public void run() {
 					image = getImage(entry);
-					titleLabel.setText(entry.getName());
+					titleLabel.setText(entry.getPath());
+					titleLabel.setToolTipText(entry.getPath());
 					StringBuilder infoText = new StringBuilder();
 					if (image != null) {
 						ImageData data = image.getImageData();
