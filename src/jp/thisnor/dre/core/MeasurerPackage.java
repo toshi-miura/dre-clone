@@ -218,7 +218,7 @@ public class MeasurerPackage {
 	}
 
 	private static String toLocalizedMessage(String text, Messages messages) {
-		if (text.charAt(0) == '!' && text.charAt(text.length() - 1) == '!') {
+		if (text != null && text.charAt(0) == '!' && text.charAt(text.length() - 1) == '!') {
 			return messages.getString(text.substring(1, text.length() - 1));
 		} else {
 			return text;
@@ -230,7 +230,7 @@ public class MeasurerPackage {
 		NodeList l = element.getElementsByTagName(tagName);
 		if (l.getLength() == 0) return null;
 		Node n = l.item(0).getFirstChild();
-		if (n.getNodeType() != Node.TEXT_NODE) return null;
+		if (n == null || n.getNodeType() != Node.TEXT_NODE) return null;
 		return n.getNodeValue();
 	}
 

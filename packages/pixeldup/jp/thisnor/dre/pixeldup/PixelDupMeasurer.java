@@ -24,7 +24,6 @@ import javax.imageio.ImageIO;
 
 import jp.thisnor.dre.core.FileEntry;
 import jp.thisnor.dre.core.Measurer;
-import jp.thisnor.dre.core.MeasureOptionEntry;
 import jp.thisnor.dre.core.MeasurerPackage;
 
 public class PixelDupMeasurer implements Measurer {
@@ -46,10 +45,6 @@ public class PixelDupMeasurer implements Measurer {
 			initDB();
 			storeCacheQueue = new ConcurrentLinkedQueue<CacheEntry>();
 		}
-
-		MeasureOptionEntry thresholdOption = new MeasureOptionEntry("threshold");
-		thresholdOption.setValue("1");
-		mpack.getOptionMap().put("threshold", thresholdOption);
 	}
 
 	@Override

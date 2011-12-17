@@ -15,5 +15,10 @@
 		<measurer>jp.thisnor.dre.bindup.BinDupMeasurer</measurer>
 	</class>
 	<options>
+		<option type="hidden">
+			<key>threshold</key>
+			<name></name>
+			<default>0</default>
+		</option>
 	</options>
 </package>

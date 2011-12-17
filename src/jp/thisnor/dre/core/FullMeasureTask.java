@@ -88,7 +88,7 @@ public class FullMeasureTask implements Runnable {
 				if (!stEntry.fileEntry.getPath().equals(tarEntry.fileEntry.getPath())) {
 					int realDistance = measurer.measure(stEntry.data, tarEntry.data, threshold);
 					if (realDistance <= threshold) {
-						if (simList == null) simList = Collections.synchronizedList(new ArrayList<SimilarEntry>(4));
+						if (simList == null) simList = Collections.synchronizedList(new ArrayList<SimilarEntry>(2));
 						simList.add(new SimilarEntry(stEntry.fileEntry, realDistance));
 					}
 				}

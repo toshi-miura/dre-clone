@@ -36,7 +36,7 @@
 		</option>
 		<option type="hidden">
 			<key>threshold</key>
-			<name>!OPTION_THRESHOLD!</name>
+			<name></name>
 			<default>0</default>
 		</option>
 	</options>
