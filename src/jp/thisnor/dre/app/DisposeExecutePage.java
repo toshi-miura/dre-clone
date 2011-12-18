@@ -196,22 +196,16 @@ class DisposeExecutePage extends DREPage {
 		public void run() {
 			if (file instanceof NormalFileEntry) {
 				File f = new File(((NormalFileEntry)file).getPath());
+				int dotPos = f.getName().lastIndexOf('.');
+				String name = (dotPos >= 0) ? f.getName().substring(0, dotPos) : f.getName();
+				String ext = (dotPos >= 0) ? f.getName().substring(dotPos) : ""; //$NON-NLS-1$
 				File newF = new File(dirMoveTo, f.getName());
+				int index = 2;
+				while (newF.exists()) {
+					newF = new File(dirMoveTo, String.format("%s(%d)%s", name, index++, ext));
+				}
 				if (!f.renameTo(newF)) {
-					int dotPos = newF.getName().lastIndexOf('.');
-					String name = (dotPos >= 0) ? newF.getName().substring(0, dotPos) : newF.getName();
-					String ext = (dotPos >= 0) ? newF.getName().substring(dotPos) : ""; //$NON-NLS-1$
-					boolean succeeded = false;
-					for (int i = 1; i < 1000; i++) {
-						newF = new File(dirMoveTo, String.format("%s(%3d)%s", name, i, ext)); //$NON-NLS-1$
-						if (f.renameTo(newF)) {
-							succeeded = true;
-							break;
-						}
-					}
-					if (!succeeded) {
-						log(String.format(messages.getString("DisposeExecutePage.REPORT_FAILED_MOVE_MESSAGE"), file.getPath()));
-					}
+					log(String.format(messages.getString("DisposeExecutePage.REPORT_FAILED_MOVE_MESSAGE"), file.getPath()));
 				}
 			}
 			disposeLatch.countDown();

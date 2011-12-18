@@ -32,6 +32,8 @@ import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -105,6 +107,7 @@ class FileDropListViewer {
 		fileTable.addSelectionListener(FILE_TABLE_SELECTION_LISTENER);
 		fileTable.addKeyListener(FILE_TABLE_KEY_LISTENER);
 		fileTable.addControlListener(FILE_TABLE_RESIZE_LISTENER);
+		fileTable.addPaintListener(FILE_TABLE_PAINT_LISTENER);
 		fileTable.addListener(SWT.MeasureItem, FILE_TABLE_MEASURE_ITEM_LISTENER);
 		fileTable.addListener(SWT.EraseItem, FILE_TABLE_ERASE_ITEM_LISTENER);
 		fileTable.addListener(SWT.PaintItem, FILE_TABLE_PAINT_ITEM_LISTENER);
@@ -362,6 +365,17 @@ class FileDropListViewer {
 		@Override
 		public void controlResized(ControlEvent event) {
 			fileTable.getColumn(0).setWidth(fileTable.getClientArea().width - SUBCHECK_COLUMN_WIDTH);
+			fileTable.redraw();
+		}
+	};
+
+	private final PaintListener FILE_TABLE_PAINT_LISTENER = new PaintListener() {
+		@Override
+		public void paintControl(PaintEvent event) {
+			for (int i = 0; i < fileTable.getItemCount() - 2; i++) {
+				TableItem item = fileTable.getItem(i);
+				((TableEditor)item.getData(TABLE_EDITOR_KEY)).getEditor().redraw();
+			}
 		}
 	};
 

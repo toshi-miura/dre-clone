@@ -1,25 +1,31 @@
 package jp.thisnor.dre.core;
 
-class SynchronizedCounter {
+public class SynchronizedCounter {
 	private int count;
 
-	SynchronizedCounter() {
+	public SynchronizedCounter() {
 		this(0);
 	}
 
-	SynchronizedCounter(int initialValue) {
+	public SynchronizedCounter(int initialValue) {
 		this.count = initialValue;
 	}
 
-	synchronized int countup() {
-		return count++;
+	public int countup() {
+		synchronized (this) {
+			return count++;
+		}
 	}
 
-	synchronized int countdown() {
-		return --count;
+	public int countdown() {
+		synchronized (this) {
+			return --count;
+		}
 	}
 
-	synchronized int currentValue() {
-		return count;
+	public int currentValue() {
+		synchronized (this) {
+			return count;
+		}
 	}
 }
