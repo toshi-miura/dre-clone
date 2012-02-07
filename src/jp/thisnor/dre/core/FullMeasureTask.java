@@ -9,18 +9,21 @@ public class FullMeasureTask implements Runnable {
 	private final List<MeasureEntry> targetList, storageList;
 	private final int threshold;
 	private final SynchronizedCounter counter;
+	private final ProgressListener logger;
 
 	public FullMeasureTask(
 			List<MeasureEntry> targetList,
 			List<MeasureEntry> storageList,
 			Measurer measurer,
 			int threshold,
-			SynchronizedCounter counter) {
+			SynchronizedCounter counter,
+			ProgressListener logger) {
 		this.measurer = measurer;
 		this.targetList = targetList;
 		this.storageList = storageList;
 		this.threshold = threshold;
 		this.counter = counter;
+		this.logger = logger;
 	}
 
 	public void run() {
@@ -41,15 +44,24 @@ public class FullMeasureTask implements Runnable {
 			while (index2 < storageList.size() &&
 					(stEntry = storageList.get(index2)).firstDistance <= tarEntry.firstDistance + threshold) {
 				if (!stEntry.fileEntry.getPath().equals(tarEntry.fileEntry.getPath())) {
-					int realDistance = measurer.measure(stEntry.data, tarEntry.data, threshold);
-					if (realDistance <= threshold) {
-						if (simList == null) simList = Collections.synchronizedList(new ArrayList<SimilarEntry>(2));
-						simList.add(new SimilarEntry(stEntry.fileEntry, realDistance));
-						synchronized (stEntry) {
-							if (stEntry.simList == null)
-								stEntry.simList = Collections.synchronizedList(new ArrayList<SimilarEntry>(2));
-							stEntry.simList.add(new SimilarEntry(tarEntry.fileEntry, realDistance));
+					try {
+						int realDistance = measurer.measure(stEntry.data, tarEntry.data, threshold);
+						if (realDistance <= threshold) {
+							if (simList == null) simList = Collections.synchronizedList(new ArrayList<SimilarEntry>(2));
+							simList.add(new SimilarEntry(stEntry.fileEntry, realDistance));
+							synchronized (stEntry) {
+								if (stEntry.simList == null)
+									stEntry.simList = Collections.synchronizedList(new ArrayList<SimilarEntry>(2));
+								stEntry.simList.add(new SimilarEntry(tarEntry.fileEntry, realDistance));
+							}
 						}
+					} catch (Exception e) {
+						e.printStackTrace();
+						logger.log(String.format(
+								"%s, %s: %s (%s)",
+								tarEntry.fileEntry.getPath(), stEntry.fileEntry.getPath(),
+								e.getClass(), e.getLocalizedMessage()));
+						continue;
 					}
 				}
 				index2++;

@@ -15,8 +15,8 @@ public class Application {
 			PrintStream err = null;
 			try {
 				if (isInJar()) {
-					out = new PrintStream(new FileOutputStream("stdout")); //$NON-NLS-1$
-					err = new PrintStream(new FileOutputStream("stderr")); //$NON-NLS-1$
+					out = new PrintStream(new FileOutputStream("stdout"), true); //$NON-NLS-1$
+					err = new PrintStream(new FileOutputStream("stderr"), true); //$NON-NLS-1$
 					System.setOut(out);
 					System.setErr(err);
 				}

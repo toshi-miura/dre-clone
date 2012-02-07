@@ -59,7 +59,7 @@ public class LLSMeasurer implements Measurer {
 	public Object convert(FileEntry fileEntry) throws Exception {
 		if (useCache) {
 			/* キャッシュが存在すれば、それを利用する */
-			LLSData data = loadCache(fileEntry);
+			byte[] data = loadCache(fileEntry);
 			if (data != null) return data;
 		}
 
@@ -155,7 +155,7 @@ public class LLSMeasurer implements Measurer {
 		}
 
 		/* データオブジェクトを生成 */
-		LLSData data = new LLSData(Arrays.copyOf(pixels, 64));
+		byte[] data = Arrays.copyOf(pixels, 64);
 
 		if (useCache) {
 			/* キャッシュに保存する */
@@ -170,28 +170,28 @@ public class LLSMeasurer implements Measurer {
 
 	@Override
 	public int measure(Object o1, Object o2, int threshold) {
-		LLSData data1 = (LLSData)o1;
-		LLSData data2 = (LLSData)o2;
+		byte[] data1 = (byte[])o1;
+		byte[] data2 = (byte[])o2;
 		int sum = 0;
 		switch (distType) {
 		case DISTTYPE_EUCLIDEAN:
 			int th = (threshold + 1) * (threshold + 1);
 			for (int i = 0; i < 64; i++) {
-				int d = (int)data1.pixels[i] - (int)data2.pixels[i];
+				int d = (int)data1[i] - (int)data2[i];
 				sum += d * d;
 				if (sum >= th) break;
 			}
 			return (int)Math.sqrt(sum);
 		case DISTTYPE_MANHATTAN:
 			for (int i = 0; i < 64; i++) {
-				sum += Math.abs(data1.pixels[i] - data2.pixels[i]);
+				sum += Math.abs(data1[i] - data2[i]);
 				if (sum > threshold) break;
 			}
 			return sum;
 		case DISTTYPE_CHEBYSHEV:
 			int max = 0;
 			for (int i = 0; i < 64; i++) {
-				int d = Math.abs(data1.pixels[i] - data2.pixels[i]);
+				int d = Math.abs(data1[i] - data2[i]);
 				if (d > max) max = d;
 				if (max > threshold) break;
 			}
@@ -236,7 +236,7 @@ public class LLSMeasurer implements Measurer {
 		}
 	}
 
-	private LLSData loadCache(FileEntry entry) {
+	private byte[] loadCache(FileEntry entry) {
 		Connection conn = null;
 		try {
 			conn = DriverManager.getConnection(CACHE_FILE_PATH);
@@ -247,7 +247,7 @@ public class LLSMeasurer implements Measurer {
 			if (!res.next()) return null;
 			byte[] data = res.getBytes(1);
 			if (res.next()) return null;
-			return new LLSData(data);
+			return data;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
@@ -268,7 +268,7 @@ public class LLSMeasurer implements Measurer {
 				PreparedStatement stat = conn.prepareStatement(String.format(
 						"INSERT INTO %s VALUES(\"%s\", %s, ?);",
 						TABLE_NAME, cacheEntry.fileEntry.getPath(), cacheEntry.fileEntry.getLastModified()));
-				stat.setBytes(1, cacheEntry.data.pixels);
+				stat.setBytes(1, cacheEntry.data);
 				stat.executeUpdate();
 			}
 			conn.commit();
@@ -283,8 +283,8 @@ public class LLSMeasurer implements Measurer {
 
 	private static class CacheEntry {
 		private final FileEntry fileEntry;
-		private final LLSData data;
-		private CacheEntry(FileEntry fileEntry, LLSData data) {
+		private final byte[] data;
+		private CacheEntry(FileEntry fileEntry, byte[] data) {
 			this.fileEntry = fileEntry;
 			this.data = data;
 		}

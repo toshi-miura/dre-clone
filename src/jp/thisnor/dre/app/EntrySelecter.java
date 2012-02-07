@@ -1,5 +1,6 @@
 package jp.thisnor.dre.app;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -188,7 +189,7 @@ class SmallerDistanceEntrySelecter implements EntrySelecter {
 class PathFilterEntrySelecter implements EntrySelecter {
 	private final String filterPath;
 	PathFilterEntrySelecter(String path) {
-		this.filterPath = path.toLowerCase();
+		this.filterPath = path.toLowerCase() + File.separatorChar;
 	}
 	public Set<FileEntry> select(List<SimilarGroup> simGroupList) {
 		Set<FileEntry> resultSet = new HashSet<FileEntry>();

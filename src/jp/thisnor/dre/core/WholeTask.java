@@ -157,12 +157,12 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 		executor = Executors.newFixedThreadPool(numThreads);
 		counter = new SynchronizedCounter(1);
 		for (int i = 0; i < numThreads; i++) {
-			executor.submit(new FirstMeasureTask(targetEntryList, targetEntryList.get(0), measurer, counter));
+			executor.submit(new FirstMeasureTask(targetEntryList, targetEntryList.get(0), measurer, counter, logger));
 		}
 		if (targetEntryList != storageEntryList) {
 			counter = new SynchronizedCounter(0);
 			for (int i = 0; i < numThreads; i++) {
-				executor.submit(new FirstMeasureTask(storageEntryList, targetEntryList.get(0), measurer, counter));
+				executor.submit(new FirstMeasureTask(storageEntryList, targetEntryList.get(0), measurer, counter, logger));
 			}
 		}
 		executor.shutdown();
@@ -184,7 +184,7 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 		executor = Executors.newFixedThreadPool(numThreads);
 		counter = new SynchronizedCounter();
 		for (int i = 0; i < numThreads; i++) {
-			executor.submit(new FullMeasureTask(targetEntryList, storageEntryList, measurer, threshold, counter));
+			executor.submit(new FullMeasureTask(targetEntryList, storageEntryList, measurer, threshold, counter, logger));
 		}
 		executor.shutdown();
 		try {
