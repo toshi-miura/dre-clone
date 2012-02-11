@@ -1,6 +1,8 @@
 package jp.thisnor.dre.lls;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -86,8 +88,19 @@ public class LLSMeasurer implements Measurer {
 		/* グレースケール化 */
 		BufferedImage dstImage = new BufferedImage(srcWidth, srcHeight, BufferedImage.TYPE_BYTE_GRAY);
 		Graphics2D g2 = dstImage.createGraphics();
+		if (srcImage.getColorModel().getTransparency() != Transparency.OPAQUE) {
+			System.out.println(fileEntry.getName());
+			g2.setColor(Color.WHITE);
+			g2.fillRect(0, 0, srcWidth, srcHeight);
+		}
 		g2.drawImage(srcImage, 0, 0, null);
 		g2.dispose();
+		if (fileEntry.getName().endsWith(".png")) {
+			if (fileEntry.getName().contains("101") || fileEntry.getName().contains("185")) {
+				ImageIO.write(srcImage, "png", new File(fileEntry.getName() + ".src.png"));
+				ImageIO.write(dstImage, "png", new File(fileEntry.getName() + ".dst.png"));
+			}
+		}
 
 		byte[] pixels = new byte[srcWidth * srcHeight];
 		dstImage.getRaster().getDataElements(0, 0, srcWidth, srcHeight, pixels);
