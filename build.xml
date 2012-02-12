@@ -34,7 +34,7 @@
 		<mkdir dir="bin"/>
 		<javac debug="true" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
 			<src path="src"/>
-			<include name="jp/thisnor/dre/app/**"/>
+			<include name="jp/thisnor/dre/app/*"/>
 			<classpath refid="DeadRingerEraser2011.classpath"/>
 		</javac>
 		<mkdir dir="bin/jp/thisnor/dre/app/lang"/>
@@ -85,9 +85,11 @@
 		<copy todir="distribution/dev/lib">
 			<fileset dir="lib" excludes="**/swt-*.jar"/>
 		</copy>
+<!--
 		<copy todir="distribution/dev/manual">
 			<fileset dir="manual"/>
 		</copy>
+-->
 	</target>
 	<target name="make-win32-distribution" depends="make-common-distribution">
 		<mkdir dir="distribution/dev-win32"/>
@@ -102,7 +104,7 @@
 			<fileset dir="." includes="res/icon/**"/>
 			<fileset file="res/null32.png"/>
 		</jar>
-		<jar destfile="distribution/dev-win32/dre.app.win32.amd64.jar" manifest="manifest/dre.app.win32.amd64.manifest">
+		<jar destfile="distribution/dev-win32/dre.app.win32.x64.jar" manifest="manifest/dre.app.win32.x64.manifest">
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="." includes="res/icon/**"/>
 			<fileset file="res/null32.png"/>
@@ -121,7 +123,7 @@
 			<fileset dir="." includes="res/icon/**"/>
 			<fileset file="res/null32.png"/>
 		</jar>
-		<jar destfile="distribution/dev-macosx/dre.app.macosx.amd64.jar" manifest="manifest/dre.app.macosx.amd64.manifest">
+		<jar destfile="distribution/dev-macosx/dre.app.macosx.x64.jar" manifest="manifest/dre.app.macosx.x64.manifest">
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="." includes="res/icon/**"/>
 			<fileset file="res/null32.png"/>
@@ -140,7 +142,7 @@
 			<fileset dir="." includes="res/icon/**"/>
 			<fileset file="res/null32.png"/>
 		</jar>
-		<jar destfile="distribution/dev-linux/dre.app.linux.amd64.jar" manifest="manifest/dre.app.linux.amd64.manifest">
+		<jar destfile="distribution/dev-linux/dre.app.linux.x64.jar" manifest="manifest/dre.app.linux.x64.manifest">
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="." includes="res/icon/**"/>
 			<fileset file="res/null32.png"/>

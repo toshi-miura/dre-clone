@@ -231,10 +231,60 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 		t1 = System.nanoTime();
 		logger.log(String.format(messages.getString("WholeTask.FINISHED_COMPARING"), (double)((t1 - t0) / 1000000) / 1000.0));
 
+// For precious test
+//		outputSimilarPairs(simGroupList);
+
 		return simGroupList;
 	}
 
 	public List<SimilarGroup> getResult() {
 		return simGroupList;
 	}
+
+// For precious test
+/*
+	private static class SimilarPair {
+		final FileEntry e1, e2;
+		final int d;
+		private SimilarPair(FileEntry e1, FileEntry e2, int d) {
+			this.e1 = e1; this.e2 = e2; this.d = d;
+		}
+	}
+
+	private void outputSimilarPairs(List<SimilarGroup> simGroups) {
+		int numPairs = 0;
+		for (SimilarGroup g : simGroups) {
+			numPairs += g.getSimilarList().size();
+		}
+		numPairs /= 2;
+		List<SimilarPair> pairs = new ArrayList<SimilarPair>(numPairs);
+		for (SimilarGroup g : simGroups) {
+			FileEntry e1 = g.getFileEntry();
+			for (SimilarEntry sim : g.getSimilarList()) {
+				FileEntry e2 = sim.getFileEntry();
+				int d = sim.getDistance();
+				if (e1.getPath().compareTo(e2.getPath()) < 0) {
+					pairs.add(new SimilarPair(e1, e2, d));
+				}
+			}
+		}
+		Collections.sort(pairs, new Comparator<SimilarPair>() {
+			@Override
+			public int compare(SimilarPair o1, SimilarPair o2) {
+				return Integer.signum(o1.d - o2.d);
+			}
+		});
+		PrintWriter pw = null;
+		try {
+			pw = new PrintWriter("tmp/result.txt");
+			for (SimilarPair pair : pairs) {
+				pw.printf("%-13s, %-13s, % 3d%n", pair.e1.getName(), pair.e2.getName(), pair.d);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (pw != null) pw.close();
+		}
+	}
+	*/
 }

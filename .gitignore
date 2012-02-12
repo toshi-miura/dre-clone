@@ -11,6 +11,8 @@ manual/
 profile/
 res/
 testdata*/
+src2/
 prefs
 stderr
 stdout
+tmp/

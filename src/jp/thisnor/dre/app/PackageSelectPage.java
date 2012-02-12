@@ -118,13 +118,20 @@ public class PackageSelectPage extends DREPage {
 			}
 		}
 		String defaultPackagePath = prefs.getString(PREFS_PACKAGE_KEY);
-		for (TableItem item : packageListViewer.getTable().getItems()) {
-			MeasurerPackage pack = (MeasurerPackage)item.getData();
-			if (pack.getKey().equals(defaultPackagePath)) {
-				packageListViewer.getTable().setSelection(item);
-				setActivePackage(pack);
-				break;
+		if (defaultPackagePath != null) {
+			for (TableItem item : packageListViewer.getTable().getItems()) {
+				MeasurerPackage pack = (MeasurerPackage)item.getData();
+				if (pack.getKey().equals(defaultPackagePath)) {
+					packageListViewer.getTable().setSelection(item);
+					setActivePackage(pack);
+					break;
+				}
 			}
+		} else if (packageListViewer.getTable().getItemCount() > 0) {
+			TableItem item = packageListViewer.getTable().getItem(0);
+			MeasurerPackage pack = (MeasurerPackage)item.getData();
+			packageListViewer.getTable().setSelection(item);
+			setActivePackage(pack);
 		}
 
 		numThreadsSpinner.setSelection(prefs.getInt(PREFS_NUM_THREAD_KEY));
