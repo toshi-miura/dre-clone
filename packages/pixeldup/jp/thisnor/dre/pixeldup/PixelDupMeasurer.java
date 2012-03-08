@@ -152,7 +152,7 @@ public class PixelDupMeasurer implements Measurer {
 			conn = DriverManager.getConnection("jdbc:sqlite:" + CACHE_FILE.getPath());
 			Statement stat = conn.createStatement();
 			ResultSet res = stat.executeQuery(String.format(
-					"SELECT hash FROM %s WHERE name = %s AND date = %s;",
+					"SELECT hash FROM %s WHERE name = \"%s\" AND date = %d;",
 					TABLE_NAME, entry.getPath(), entry.getLastModified()));
 			if (!res.next()) return null;
 			byte[] hash = res.getBytes(1);
@@ -189,9 +189,12 @@ public class PixelDupMeasurer implements Measurer {
 			conn.setAutoCommit(false);
 			CacheEntry cacheEntry = null;
 			while ((cacheEntry = storeCacheQueue.poll()) != null) {
-				PreparedStatement stat = conn.prepareStatement(String.format(
-						"INSERT INTO %s VALUES(%s, %s, ?);",
-						TABLE_NAME, cacheEntry.fileEntry.getPath(), cacheEntry.fileEntry.getLastModified()));
+				String statStr = String.format(
+						"INSERT INTO %s VALUES(\"%s\", %d, ?);",
+						TABLE_NAME,
+						cacheEntry.fileEntry.getPath(),
+						cacheEntry.fileEntry.getLastModified());
+				PreparedStatement stat = conn.prepareStatement(statStr);
 				stat.setBytes(1, cacheEntry.data.hash);
 				stat.executeUpdate();
 			}

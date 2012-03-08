@@ -95,12 +95,6 @@ public class LLSMeasurer implements Measurer {
 		}
 		g2.drawImage(srcImage, 0, 0, null);
 		g2.dispose();
-		if (fileEntry.getName().endsWith(".png")) {
-			if (fileEntry.getName().contains("101") || fileEntry.getName().contains("185")) {
-				ImageIO.write(srcImage, "png", new File(fileEntry.getName() + ".src.png"));
-				ImageIO.write(dstImage, "png", new File(fileEntry.getName() + ".dst.png"));
-			}
-		}
 
 		byte[] pixels = new byte[srcWidth * srcHeight];
 		dstImage.getRaster().getDataElements(0, 0, srcWidth, srcHeight, pixels);
