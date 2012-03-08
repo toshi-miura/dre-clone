@@ -68,7 +68,7 @@ public class PackageSelectPage extends DREPage {
 
 		prefs = frame.getPreferences();
 		prefs.setDefault(PREFS_PACKAGE_KEY, "jp.thisnor.dre.simimg"); //$NON-NLS-1$
-		prefs.setDefault(PREFS_NUM_THREAD_KEY, 2);
+		prefs.setDefault(PREFS_NUM_THREAD_KEY, Runtime.getRuntime().availableProcessors());
 
 		rootComp = new SashForm(parent, SWT.HORIZONTAL);
 		rootComp.setSashWidth(8);

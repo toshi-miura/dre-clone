@@ -65,17 +65,17 @@ public class WholeTask implements Callable<List<SimilarGroup>> {
 			storageEntryList = targetEntryList;
 			counter = new SynchronizedCounter();
 			for (int i = 0; i < numThreads; i++) {
-				executor.submit(new ResolvePathTask(targetList, targetEntryList, filter, counter));
+				executor.submit(new ResolvePathTask(targetList, targetEntryList, filter, counter, logger, locale));
 			}
 		} else {
 			storageEntryList = new ArrayList<MeasureEntry>();
 			counter = new SynchronizedCounter();
 			for (int i = 0; i < numThreads; i++) {
-				executor.submit(new ResolvePathTask(targetList, targetEntryList, filter, counter));
+				executor.submit(new ResolvePathTask(targetList, targetEntryList, filter, counter, logger, locale));
 			}
 			counter = new SynchronizedCounter();
 			for (int i = 0; i < numThreads; i++) {
-				executor.submit(new ResolvePathTask(storageList, storageEntryList, filter, counter));
+				executor.submit(new ResolvePathTask(storageList, storageEntryList, filter, counter, logger, locale));
 			}
 		}
 		executor.shutdown();

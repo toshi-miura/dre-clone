@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -14,12 +15,16 @@ public class ResolvePathTask implements Runnable {
 	private final List<MeasureEntry> entryList;
 	private final PathFilter filter;
 	private final SynchronizedCounter counter;
+	private final ProgressListener logger;
+	private final Messages messages;
 
-	public ResolvePathTask(List<String> pathList, List<MeasureEntry> entryList, PathFilter filter, SynchronizedCounter counter) {
+	public ResolvePathTask(List<String> pathList, List<MeasureEntry> entryList, PathFilter filter, SynchronizedCounter counter, ProgressListener logger, Locale locale) {
 		this.pathList = pathList;
 		this.entryList = entryList;
 		this.filter = filter != null ? filter : PathFilter.DEFAULT;
 		this.counter = counter;
+		this.logger = logger;
+		messages = new Messages("jp.thisnor.dre.core.lang", locale, this.getClass().getClassLoader());
 	}
 
 	public void run() {
@@ -64,7 +69,14 @@ public class ResolvePathTask implements Runnable {
 	}
 
 	private void traverseDir(File dir, boolean recursive) {
-		for (File f : dir.listFiles()) {
+		File[] files = dir.listFiles();
+		if (files == null) {
+			logger.log(String.format("%s: %s",
+					messages.getString(messages.getString("ResolvePathTask.FAILED_TO_READ_DIRECTORY")),
+					dir.getAbsolutePath()));
+			return;
+		}
+		for (File f : files) {
 			if (!f.isDirectory()) {
 				checkAndAddPath(f.getPath());
 			} else if (recursive) {
