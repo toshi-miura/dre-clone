@@ -228,7 +228,9 @@ class FileDropListViewer {
 			}
 			TableItem item = newTableItem(exPath, insertPos++);
 			if (preSub) {
-				((Button)((TableEditor)item.getData(TABLE_EDITOR_KEY)).getEditor()).setSelection(preSub);
+				TableEditor editorCtrl = (TableEditor)item.getData(TABLE_EDITOR_KEY);
+				if (editorCtrl != null)
+					((Button)editorCtrl.getEditor()).setSelection(preSub);
 			}
 			if (preProps != null) {
 				item.setData(TABLE_PROPS_KEY, preProps);
@@ -374,7 +376,9 @@ class FileDropListViewer {
 		public void paintControl(PaintEvent event) {
 			for (int i = 0; i < fileTable.getItemCount() - 2; i++) {
 				TableItem item = fileTable.getItem(i);
-				((TableEditor)item.getData(TABLE_EDITOR_KEY)).getEditor().redraw();
+				TableEditor editorCtrl = (TableEditor)item.getData(TABLE_EDITOR_KEY);
+				if (editorCtrl != null)
+					editorCtrl.getEditor().redraw();
 			}
 		}
 	};

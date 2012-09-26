@@ -7,7 +7,7 @@ import java.io.PrintStream;
 
 public class Application {
 	public static String APP_NAME = "DRE Similar Images Detector";
-	public static String VERSION = "1.0.1";
+	public static String VERSION = "1.0.2";
 
 	public static void main(String[] args) {
 		if (args.length == 0) {

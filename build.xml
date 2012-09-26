@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project basedir="." default="build-all" name="DeadRingerEraser2011">
-	<property name="version" value="1.0.1"/>
+	<property name="version" value="1.0.2"/>
 	<property environment="env"/>
 	<property name="debuglevel" value="source,lines,vars"/>
 	<property name="target" value="1.6"/>
@@ -16,7 +16,7 @@
 		<pathelement location="lib/org.eclipse.jface_3.6.1.M20100825-0800.jar"/>
 		<pathelement location="lib/antlr-runtime-3.1.3.jar"/>
 		<pathelement location="lib/sqlite-jdbc-3.6.20.1.jar"/>
-		<pathelement location="lib/swt-3.7.1-win32-win32-x86_64.jar"/>
+<!--		<pathelement location="lib/swt-3.7.1-win32-win32-x86_64.jar"/>-->
 	</path>
 	<target name="build-core">
 		<mkdir dir="bin"/>
@@ -62,87 +62,95 @@
 	</target>
 	<target name="build-all">
 		<antcall target="build-core"/>
+		<antcall target="build-app"/>
 		<antcall target="build-bindup-package"/>
 		<antcall target="build-lls-package"/>
 		<antcall target="build-pixeldup-package"/>
 	</target>
 	<target name="make-common-distribution" depends="build-all">
-		<mkdir dir="distribution/dev/lib"/>
-		<mkdir dir="distribution/dev/packages"/>
-		<mkdir dir="distribution/dev/manual"/>
-		<jar destfile="distribution/dev/lib/dre.core.jar" manifest="manifest/dre.core.manifest">
+		<mkdir dir="distribution/dre-${version}-common"/>
+		<mkdir dir="distribution/dre-${version}-common/lib"/>
+		<mkdir dir="distribution/dre-${version}-common/packages"/>
+		<jar destfile="distribution/dre-${version}-common/lib/dre.core.jar" manifest="manifest/dre.core.manifest">
 			<fileset dir="bin" includes="jp/thisnor/dre/core/**"/>
 		</jar>
-		<jar destfile="distribution/dev/packages/bindup.jar" manifest="manifest/package.manifest">
-			<fileset dir="packages/bindup" excludes="**/*.java"/>
+		<jar destfile="distribution/dre-${version}-common/packages/bindup.jar" manifest="manifest/package.manifest">
+			<fileset dir="packages/bindup" includes="**/*.class"/>
+			<fileset dir="packages/bindup" includes="**/lang/**"/>
+			<fileset file="packages/bindup/package.xml"/>
 		</jar>
-		<jar destfile="distribution/dev/packages/lls.jar" manifest="manifest/package.manifest">
-			<fileset dir="packages/lls" excludes="**/*.java"/>
+		<jar destfile="distribution/dre-${version}-common/packages/lls.jar" manifest="manifest/package.manifest">
+			<fileset dir="packages/lls" includes="**/*.class"/>
+			<fileset dir="packages/lls" includes="**/lang/**"/>
+			<fileset file="packages/lls/package.xml"/>
 		</jar>
-		<jar destfile="distribution/dev/packages/pixeldup.jar" manifest="manifest/package.manifest">
-			<fileset dir="packages/pixeldup" excludes="**/*.java"/>
+		<jar destfile="distribution/dre-${version}-common/packages/pixeldup.jar" manifest="manifest/package.manifest">
+			<fileset dir="packages/pixeldup" includes="**/*.class"/>
+			<fileset dir="packages/pixeldup" includes="**/lang/**"/>
+			<fileset file="packages/pixeldup/package.xml"/>
 		</jar>
-		<copy todir="distribution/dev/lib">
-			<fileset dir="lib" excludes="**/swt-*.jar"/>
-		</copy>
-<!--
-		<copy todir="distribution/dev/manual">
-			<fileset dir="manual"/>
-		</copy>
--->
 	</target>
 	<target name="make-win32-distribution" depends="make-common-distribution">
-		<mkdir dir="distribution/dev-win32"/>
-		<copy todir="distribution/dev-win32">
-			<fileset dir="distribution/dev"/>
+		<mkdir dir="distribution/dre-${version}-win32"/>
+		<copy todir="distribution/dre-${version}-win32">
+			<fileset dir="distribution/common"/>
 		</copy>
-		<copy todir="distribution/dev-win32/lib">
-			<fileset file="lib/swt-3.7.1-win32-win32*.jar"/>
+		<copy todir="distribution/dre-${version}-win32">
+			<fileset dir="distribution/common-win32"/>
 		</copy>
-		<jar destfile="distribution/dev-win32/dre.app.win32.x86.jar" manifest="manifest/dre.app.win32.x86.manifest">
+		<copy todir="distribution/dre-${version}-win32">
+			<fileset dir="distribution/dre-${version}-common"/>
+		</copy>
+		<jar destfile="distribution/dre-${version}-win32/dre.app.win32.x86.jar" manifest="manifest/dre.app.win32.x86.manifest">
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="." includes="res/icon/**"/>
 			<fileset file="res/null32.png"/>
 		</jar>
-		<jar destfile="distribution/dev-win32/dre.app.win32.x64.jar" manifest="manifest/dre.app.win32.x64.manifest">
+		<jar destfile="distribution/dre-${version}-win32/dre.app.win32.x64.jar" manifest="manifest/dre.app.win32.x64.manifest">
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="." includes="res/icon/**"/>
 			<fileset file="res/null32.png"/>
 		</jar>
 	</target>
 	<target name="make-macosx-distribution" depends="make-common-distribution">
-		<mkdir dir="distribution/dev-macosx"/>
-		<copy todir="distribution/dev-macosx">
-			<fileset dir="distribution/dev"/>
+		<mkdir dir="distribution/dre-${version}-macosx"/>
+		<copy todir="distribution/dre-${version}-macosx">
+			<fileset dir="distribution/common"/>
 		</copy>
-		<copy todir="distribution/dev-macosx/lib">
-			<fileset file="lib/swt-3.7.1-cocoa-macosx*.jar"/>
+		<copy todir="distribution/dre-${version}-macosx">
+			<fileset dir="distribution/common-macosx"/>
 		</copy>
-		<jar destfile="distribution/dev-macosx/dre.app.macosx.x86.jar" manifest="manifest/dre.app.macosx.x86.manifest">
+		<copy todir="distribution/dre-${version}-macosx">
+			<fileset dir="distribution/dre-${version}-common"/>
+		</copy>
+		<jar destfile="distribution/dre-${version}-macosx/dre.app.macosx.x86.jar" manifest="manifest/dre.app.macosx.x86.manifest">
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="." includes="res/icon/**"/>
 			<fileset file="res/null32.png"/>
 		</jar>
-		<jar destfile="distribution/dev-macosx/dre.app.macosx.x64.jar" manifest="manifest/dre.app.macosx.x64.manifest">
+		<jar destfile="distribution/dre-${version}-macosx/dre.app.macosx.x64.jar" manifest="manifest/dre.app.macosx.x64.manifest">
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="." includes="res/icon/**"/>
 			<fileset file="res/null32.png"/>
 		</jar>
 	</target>
 	<target name="make-linux-distribution" depends="make-common-distribution">
-		<mkdir dir="distribution/dev-linux"/>
-		<copy todir="distribution/dev-linux">
-			<fileset dir="distribution/dev"/>
+		<mkdir dir="distribution/dre-${version}-linux"/>
+		<copy todir="distribution/dre-${version}-linux">
+			<fileset dir="distribution/common"/>
 		</copy>
-		<copy todir="distribution/dev-linux/lib">
-			<fileset file="lib/swt-3.7.1-gtk-linux*.jar"/>
+		<copy todir="distribution/dre-${version}-linux">
+			<fileset dir="distribution/common-linux"/>
 		</copy>
-		<jar destfile="distribution/dev-linux/dre.app.linux.x86.jar" manifest="manifest/dre.app.linux.x86.manifest">
+		<copy todir="distribution/dre-${version}-linux">
+			<fileset dir="distribution/dre-${version}-common"/>
+		</copy>
+		<jar destfile="distribution/dre-${version}-linux/dre.app.linux.x86.jar" manifest="manifest/dre.app.linux.x86.manifest">
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="." includes="res/icon/**"/>
 			<fileset file="res/null32.png"/>
 		</jar>
-		<jar destfile="distribution/dev-linux/dre.app.linux.x64.jar" manifest="manifest/dre.app.linux.x64.manifest">
+		<jar destfile="distribution/dre-${version}-linux/dre.app.linux.x64.jar" manifest="manifest/dre.app.linux.x64.manifest">
 			<fileset dir="bin" includes="jp/thisnor/dre/app/**"/>
 			<fileset dir="." includes="res/icon/**"/>
 			<fileset file="res/null32.png"/>
@@ -154,15 +162,12 @@
 		<antcall target="make-linux-distribution"/>
 	</target>
 	<target name="make-all-zip" depends="make-all-distribution">
-		<zip destfile="distribution/dre-${version}-win32.zip" basedir="distribution/dev-win32"/>
-		<zip destfile="distribution/dre-${version}-macosx.zip" basedir="distribution/dev-macosx"/>
-		<zip destfile="distribution/dre-${version}-linux.zip" basedir="distribution/dev-linux"/>
+		<zip destfile="distribution/dre-${version}-win32.zip" basedir="distribution/dre-${version}-win32"/>
+		<zip destfile="distribution/dre-${version}-macosx.zip" basedir="distribution/dre-${version}-macosx"/>
+		<zip destfile="distribution/dre-${version}-linux.zip" basedir="distribution/dre-${version}-linux"/>
 	</target>
 	<target name="clean">
 		<delete dir="bin"/>
-		<delete dir="packages/bindupsample"/>
-		<delete dir="packages/bindup"/>
-		<delete dir="packages/lls"/>
-		<delete dir="packages/pixeldup"/>
+		<delete file="packages/**/*.class"/>
 	</target>
 </project>

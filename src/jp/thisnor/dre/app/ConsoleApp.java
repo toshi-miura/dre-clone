@@ -55,7 +55,7 @@ class ConsoleApp {
 				optionStrMap = textToMap(arg.substring("--package-option=".length()));
 			} else if (arg.startsWith("--num-threads=")) {
 				try {
-					numThreads = Integer.parseInt(arg.substring("--numthreads=".length()));
+					numThreads = Integer.parseInt(arg.substring("--num-threads=".length()));
 				} catch (NumberFormatException e) {
 					System.err.println("WARNING: Need number: " + arg);
 					numThreads = 1;
@@ -67,7 +67,7 @@ class ConsoleApp {
 	}
 
 	private static List<String> textToList(String text) {
-		String[] strs = text.split(":");
+		String[] strs = text.split("\\" + File.pathSeparator);
 		List<String> strList = Collections.synchronizedList(new ArrayList<String>(strs.length));
 		for (String str : strs) {
 			if (str.charAt(0) == '"') str = str.substring(1);
@@ -78,7 +78,7 @@ class ConsoleApp {
 	}
 
 	private static Map<String, String> textToMap(String text) {
-		String[] strs = text.split(":");
+		String[] strs = text.split(",");
 		Map<String, String> strMap = new HashMap<String, String>(strs.length, 2.0f);
 		for (String str : strs) {
 			int seppos = str.indexOf('=');

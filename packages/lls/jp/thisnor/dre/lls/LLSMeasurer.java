@@ -79,7 +79,7 @@ public class LLSMeasurer implements Measurer {
 			} catch (IOException e) {}
 		}
 		if (srcImage == null) {
-			new IOException(String.format("Failed in reading: %s", fileEntry.getPath()));
+			throw new IOException(String.format("Failed in reading: %s", fileEntry.getPath()));
 		}
 
 		int srcWidth = srcImage.getWidth();
