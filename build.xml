@@ -165,6 +165,8 @@
 		<zip destfile="distribution/dre-${version}-win32.zip" basedir="distribution/dre-${version}-win32"/>
 		<zip destfile="distribution/dre-${version}-macosx.zip" basedir="distribution/dre-${version}-macosx"/>
 		<zip destfile="distribution/dre-${version}-linux.zip" basedir="distribution/dre-${version}-linux"/>
+		<tar destfile="distribution/dre-${version}-macosx.tar.gz" basedir="distribution/dre-${version}-macosx" compression="gzip"/>
+		<tar destfile="distribution/dre-${version}-linux.tar.gz" basedir="distribution/dre-${version}-linux" compression="gzip"/>
 	</target>
 	<target name="clean">
 		<delete dir="bin"/>
